@@ -4,7 +4,8 @@ import {
   Server, BrainCircuit, ArrowRight, MapPin, Camera, 
   Cpu, Wifi, MessageCircle, TrendingUp, Clock, Bot,
   LayoutDashboard, ShoppingCart, Settings, LogOut, Search, 
-  AlertTriangle, FileText, Zap, ChevronRight, BarChart3, Terminal, Menu, X
+  AlertTriangle, FileText, Zap, ChevronRight, BarChart3, Terminal, Menu, X,
+  Users, Calendar, TrendingDown, Leaf, Layers
 } from 'lucide-react';
 
 // ==========================================
@@ -13,7 +14,38 @@ import {
 
 const glassCard = "bg-slate-900/60 backdrop-blur-md border border-white/5 shadow-xl";
 
-// Variantes de Animación
+// --- Componente de Barra de Progreso Animada ---
+const AnimatedProgressBar: FC<{ value: number; color: string; delay?: number }> = ({ value, color, delay = 0 }) => (
+  <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden mt-2">
+    <motion.div
+      initial={{ width: 0 }}
+      animate={{ width: `${value}%` }}
+      transition={{ duration: 1.5, delay: delay, ease: "circOut" }}
+      className={`h-full rounded-full ${color}`}
+    />
+  </div>
+);
+
+// --- Componente de Gráfico de Barras Verticales ---
+const AnimatedBarChart = () => (
+  <div className="flex items-end justify-between h-32 gap-2 mt-4">
+    {[35, 55, 40, 70, 60, 90, 85].map((height, i) => (
+      <motion.div
+        key={i}
+        initial={{ height: 0, opacity: 0 }}
+        animate={{ height: `${height}%`, opacity: 1 }}
+        transition={{ duration: 0.8, delay: i * 0.1 }}
+        className="w-full bg-cyan-500/20 hover:bg-cyan-500/40 rounded-t-sm relative group transition-colors"
+      >
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity">
+          {height}%
+        </div>
+      </motion.div>
+    ))}
+  </div>
+);
+
+// Variantes Generales
 const fadeInScale = {
   hidden: { opacity: 0, scale: 0.98 },
   visible: { opacity: 1, scale: 1, transition: { duration: 0.4, ease: "easeOut" } }
@@ -50,17 +82,26 @@ const themes = {
   [View.CONFIG]: { color: 'text-violet-400', border: 'border-violet-500/30', bg: 'bg-violet-500/10' },
 };
 
-const MetricCard: FC<{ title: string; value: string; trend: string; isPositive?: boolean; theme: any }> = ({ title, value, trend, isPositive, theme }) => (
+const MetricCard: FC<{ title: string; value: string; trend: string; isPositive?: boolean; theme: any; progress: number; delay?: number }> = ({ title, value, trend, isPositive, theme, progress, delay }) => (
   <motion.div 
     variants={fadeInScale}
     className={`${glassCard} p-6 rounded-2xl border-l-4 ${theme.border.replace('/30', '')} relative overflow-hidden`}
   >
-    <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">{title}</h3>
-    <div className="text-3xl font-bold text-white mb-2">{value}</div>
-    <div className={`text-sm font-bold flex items-center gap-1 ${isPositive ? theme.color : 'text-red-400'}`}>
-      {isPositive ? <TrendingUp className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
-      {trend}
+    <div className="flex justify-between items-start mb-2">
+      <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">{title}</h3>
+      <div className={`text-xs font-bold flex items-center gap-1 ${isPositive ? theme.color : 'text-red-400'}`}>
+        {isPositive ? <TrendingUp className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
+        {trend}
+      </div>
     </div>
+    <div className="text-3xl font-bold text-white mb-4">{value}</div>
+    
+    {/* Barra Animada */}
+    <div className="flex justify-between text-[10px] text-slate-500 mb-1">
+      <span>Meta Mensual</span>
+      <span>{progress}%</span>
+    </div>
+    <AnimatedProgressBar value={progress} color={theme.color.replace('text-', 'bg-')} delay={delay} />
   </motion.div>
 );
 
@@ -74,7 +115,6 @@ const Sidebar: FC<{ currentView: View; onNavigate: (v: View) => void; onExit: ()
     { id: View.CONFIG, label: 'Configuración', icon: Settings },
   ];
 
-  // Clases para controlar visibilidad en móvil vs desktop
   const sidebarClasses = `
     fixed inset-y-0 left-0 z-50 w-64 bg-slate-950 border-r border-slate-800 p-6 flex flex-col justify-between transition-transform duration-300
     ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
@@ -83,13 +123,7 @@ const Sidebar: FC<{ currentView: View; onNavigate: (v: View) => void; onExit: ()
 
   return (
     <>
-      {/* Overlay Oscuro para móvil cuando el menú está abierto */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/80 z-40 md:hidden backdrop-blur-sm"
-          onClick={onClose}
-        />
-      )}
+      {isOpen && <div className="fixed inset-0 bg-black/80 z-40 md:hidden backdrop-blur-sm" onClick={onClose} />}
 
       <aside className={sidebarClasses}>
         <div>
@@ -98,7 +132,6 @@ const Sidebar: FC<{ currentView: View; onNavigate: (v: View) => void; onExit: ()
               <img src="/logo-phoenix.png" alt="Logo" className="h-8 w-auto" />
               <span className="font-bold text-white tracking-tight text-lg">PHOENIX <span className={`transition-colors duration-500 ${t.color}`}>SUITE</span></span>
             </div>
-            {/* Botón cerrar solo visible en móvil */}
             <button onClick={onClose} className="md:hidden text-slate-400 hover:text-white">
               <X className="w-6 h-6" />
             </button>
@@ -137,21 +170,53 @@ const DashboardView = () => {
   return (
     <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.1 } } }} className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-2">
-        <h2 className="text-2xl md:text-3xl font-bold text-white">Resumen <span className={t.color}>General</span></h2>
-        <span className="text-slate-500 text-sm font-mono">Actualizado: Ahora mismo</span>
+        <h2 className="text-2xl md:text-3xl font-bold text-white">Tablero de <span className={t.color}>Control</span></h2>
+        <span className="text-slate-500 text-sm font-mono">Última sincro: Hace 2 min</span>
       </div>
       
-      {/* Grid responsivo: 1 columna en móvil, 3 en desktop */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        <MetricCard title="Ventas Hoy" value="$ 850.200" trend="+12%" isPositive theme={t} />
-        <MetricCard title="Tickets" value="142" trend="+5%" isPositive theme={t} />
-        <MetricCard title="Eficiencia IA" value="98%" trend="Óptimo" isPositive theme={t} />
+        <MetricCard title="Ingresos Semanales" value="$ 850.200" trend="+12%" isPositive theme={t} progress={78} delay={0.2} />
+        <MetricCard title="Tickets Promedio" value="142" trend="+5%" isPositive theme={t} progress={65} delay={0.4} />
+        <MetricCard title="Eficiencia Operativa" value="98%" trend="Óptimo" isPositive theme={t} progress={98} delay={0.6} />
       </div>
 
-      <div className={`p-1 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-900`}>
-        <div className="bg-slate-950 rounded-xl p-6 h-48 md:h-64 flex items-center justify-center border border-slate-800 relative overflow-hidden">
-             <BarChart3 className={`w-full h-full opacity-10 ${t.color}`} />
-             <p className="absolute text-slate-400 text-center px-4">Gráfico de rendimiento interactivo disponible en versión full</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Gráfico de Ventas Visual */}
+        <div className={`${glassCard} p-6 rounded-2xl`}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-slate-300 font-bold">Rendimiento en Tiempo Real</h3>
+            <BarChart3 className="text-slate-500 w-5 h-5" />
+          </div>
+          <AnimatedBarChart />
+          <div className="flex justify-between mt-2 text-xs text-slate-500 px-1">
+             <span>Lun</span><span>Mar</span><span>Mie</span><span>Jue</span><span>Vie</span><span>Sab</span><span>Dom</span>
+          </div>
+        </div>
+
+        {/* Alertas Rápidas */}
+        <div className={`${glassCard} p-6 rounded-2xl`}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-slate-300 font-bold">Alertas Operativas</h3>
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+          </div>
+          <div className="space-y-3">
+             {[
+               { icon: Clock, text: "Personal de cocina llegando a límite de horas extra.", color: "text-yellow-400" },
+               { icon: TrendingDown, text: "Stock de 'Café' bajo (3 días restantes).", color: "text-orange-400" },
+               { icon: Users, text: "Alta demanda prevista para el sábado noche.", color: "text-cyan-400" }
+             ].map((alert, i) => (
+               <motion.div 
+                 key={i} 
+                 initial={{ x: 20, opacity: 0 }} 
+                 animate={{ x: 0, opacity: 1 }} 
+                 transition={{ delay: 0.8 + (i * 0.1) }}
+                 className="flex items-center gap-3 p-3 bg-slate-950/50 rounded-lg border border-white/5"
+               >
+                 <alert.icon className={`w-4 h-4 ${alert.color}`} />
+                 <span className="text-sm text-slate-300">{alert.text}</span>
+               </motion.div>
+             ))}
+          </div>
         </div>
       </div>
     </motion.div>
@@ -162,13 +227,11 @@ const POSView = () => {
   const t = themes[View.POS];
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col md:grid md:grid-cols-3 gap-6 h-auto md:h-[85vh]">
-      {/* Columna Productos */}
       <div className={`col-span-2 ${glassCard} rounded-2xl p-4 md:p-6 flex flex-col order-2 md:order-1`}>
          <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
             <h2 className="text-xl font-bold text-white">Punto de Venta <span className={t.color}>Rápido</span></h2>
             <input type="text" placeholder="Buscar..." className="w-full md:w-auto bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:border-emerald-500 outline-none transition-colors" />
          </div>
-         {/* Grid de productos adaptable */}
          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4 overflow-y-auto pr-2 custom-scrollbar max-h-[400px] md:max-h-none">
             {[1,2,3,4,5,6,7,8,9].map(i => (
               <motion.div 
@@ -185,8 +248,6 @@ const POSView = () => {
             ))}
          </div>
       </div>
-
-      {/* Columna Ticket (Arriba en móvil, derecha en desktop) */}
       <div className={`col-span-1 ${glassCard} rounded-2xl p-4 md:p-6 flex flex-col justify-between border-t-4 ${t.border.replace('/30','')} order-1 md:order-2`}>
          <div>
            <h2 className="text-xl font-bold text-white mb-6">Ticket #055</h2>
@@ -206,49 +267,130 @@ const POSView = () => {
   );
 };
 
+// --- AUDITORÍA IA SERIA Y PROFUNDA ---
 const AuditorView = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [complete, setComplete] = useState(false);
+  const [activeTab, setActiveTab] = useState('summary');
 
-  const analysisText = useTypewriter(
-    "> Conectando con base de datos...\n> Analizando historial de ventas (CSV)...\n> Detectando patrones de consumo...\n> ALERTA: Costo 'Harina' subió 12%.\n> SUGERENCIA: Ajustar precios (+10%).\n> Estado del sistema: OPTIMIZADO.",
-    20,
-    analyzing
-  );
+  // Textos para la simulación de carga
+  const loadSteps = [
+    "Conectando Neural Core...", 
+    "Cruzando datos de turnos con ley laboral...", 
+    "Analizando rentabilidad de carta...", 
+    "Calculando proyección estacional...",
+    "Generando reporte estratégico..."
+  ];
+  const [currentStep, setCurrentStep] = useState(0);
 
-  const handleAudit = () => {
-    setAnalyzing(true);
-    setComplete(false);
-    setTimeout(() => setComplete(true), 4000); 
-  };
+  useEffect(() => {
+    if (analyzing && currentStep < loadSteps.length) {
+      const timer = setTimeout(() => setCurrentStep(prev => prev + 1), 800);
+      return () => clearTimeout(timer);
+    } else if (currentStep === loadSteps.length) {
+      setComplete(true);
+    }
+  }, [analyzing, currentStep]);
 
   return (
-    <div className="h-full flex flex-col items-center justify-center max-w-3xl mx-auto text-center px-4">
-      {!analyzing ? (
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="space-y-8 py-10">
-          <Bot className="w-24 h-24 md:w-32 md:h-32 text-amber-400 mx-auto animate-bounce-slow" />
-          <h2 className="text-3xl md:text-4xl font-bold text-white">Auditoría IA</h2>
-          <p className="text-slate-400 text-base md:text-lg max-w-md mx-auto">
-            Analiza costos y competencia en segundos.
-          </p>
+    <div className="h-full flex flex-col max-w-4xl mx-auto px-2">
+      {!analyzing && !complete ? (
+        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center justify-center h-full text-center space-y-8">
+          <div className="relative">
+             <div className="absolute inset-0 bg-amber-500/20 blur-[50px] rounded-full animate-pulse" />
+             <Bot className="w-24 h-24 md:w-32 md:h-32 text-amber-400 mx-auto relative z-10" />
+          </div>
+          <div>
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Auditoría Estratégica IA</h2>
+            <p className="text-slate-400 text-base md:text-xl max-w-xl mx-auto">
+              Analizamos Recursos Humanos, Inventario y Rentabilidad para darte un plan de acción inmediato. <br/>
+              <span className="text-amber-400/70 text-sm mt-2 block font-mono">Adaptable a: Retail • Gastronomía • Hotelería</span>
+            </p>
+          </div>
           <motion.button
-            onClick={handleAudit}
+            onClick={() => setAnalyzing(true)}
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 px-8 py-4 md:px-10 md:py-5 rounded-full font-black text-lg md:text-xl flex items-center gap-3 mx-auto shadow-xl shadow-amber-500/20"
+            className="bg-gradient-to-r from-amber-400 to-yellow-600 text-slate-900 px-10 py-5 rounded-full font-black text-xl flex items-center gap-3 shadow-[0_0_30px_rgba(251,191,36,0.3)]"
           >
             <Zap className="w-6 h-6 fill-slate-900" />
-            IMPULSAR AHORA
+            INICIAR ANÁLISIS PROFUNDO
           </motion.button>
         </motion.div>
+      ) : !complete ? (
+        <div className="flex flex-col items-center justify-center h-full">
+           <div className="w-64 h-2 bg-slate-800 rounded-full overflow-hidden mb-4">
+             <motion.div 
+               className="h-full bg-amber-400"
+               initial={{ width: 0 }}
+               animate={{ width: `${(currentStep / loadSteps.length) * 100}%` }}
+             />
+           </div>
+           <p className="text-amber-400 font-mono text-sm">{loadSteps[Math.min(currentStep, loadSteps.length - 1)]}</p>
+        </div>
       ) : (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full text-left bg-slate-950 border border-amber-500/30 rounded-xl p-4 md:p-8 font-mono text-amber-400 shadow-2xl relative overflow-hidden h-[350px]">
-          <pre className="whitespace-pre-wrap leading-relaxed text-sm md:text-base">
-            {analysisText}
-            {complete && <span className="animate-pulse">_</span>}
-          </pre>
-          {complete && (
-             <button onClick={() => setAnalyzing(false)} className="mt-6 text-sm text-slate-400 underline w-full text-center">Reiniciar</button>
-          )}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="h-full flex flex-col">
+          <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/10">
+             <div>
+               <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                 <Terminal className="text-amber-400 w-6 h-6" /> Reporte de Inteligencia
+               </h2>
+               <p className="text-slate-500 text-xs mt-1">ID: #AUDIT-2026-X99 | Prioridad: ALTA</p>
+             </div>
+             <button onClick={() => {setAnalyzing(false); setComplete(false); setCurrentStep(0);}} className="text-slate-400 hover:text-white text-sm">Nueva Auditoría</button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto pb-10">
+            {/* Tarjeta de Alerta Inmediata */}
+            <div className="bg-red-500/10 border border-red-500/30 p-6 rounded-2xl md:col-span-2">
+               <h3 className="text-red-400 font-bold flex items-center gap-2 mb-2"><AlertTriangle className="w-5 h-5" /> ACCIÓN INMEDIATA REQUERIDA</h3>
+               <p className="text-white text-lg">Se detectó inconsistencia de precios vs. inflación semanal.</p>
+               <p className="text-slate-400 mt-2 text-sm">El insumo "Harina 000" aumentó 12% en base de datos de proveedores. Tus precios de panificados quedaron 8% abajo del margen ideal.</p>
+               <button className="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">Aplicar Ajuste Automático (+8%)</button>
+            </div>
+
+            {/* RRHH */}
+            <div className={`${glassCard} p-6 rounded-2xl`}>
+               <h3 className="text-amber-400 font-bold flex items-center gap-2 mb-4"><Users className="w-5 h-5" /> Recursos Humanos & Fatiga</h3>
+               <ul className="space-y-4 text-sm text-slate-300">
+                 <li className="flex gap-3">
+                   <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2"></div>
+                   <span><strong>Alerta de Turno:</strong> El empleado "Juan P." tiene turno mañana (08:00) mañana, pero cierra hoy a las (02:00). Riesgo de agotamiento y error operativo.</span>
+                 </li>
+                 <li className="flex gap-3">
+                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2"></div>
+                   <span><strong>Sugerencia:</strong> Rotar ingreso de Juan P. a las 11:00 AM o cubrir con turno volante.</span>
+                 </li>
+               </ul>
+            </div>
+
+            {/* Menú / Inventario */}
+            <div className={`${glassCard} p-6 rounded-2xl`}>
+               <h3 className="text-cyan-400 font-bold flex items-center gap-2 mb-4"><Layers className="w-5 h-5" /> Optimización de Oferta</h3>
+               <ul className="space-y-4 text-sm text-slate-300">
+                 <li className="flex gap-3">
+                   <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2"></div>
+                   <span><strong>Baja Rotación:</strong> El plato "Risotto de Hongos" salió solo 2 veces esta semana. Considerar eliminar de carta para reducir merma.</span>
+                 </li>
+                 <li className="flex gap-3">
+                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2"></div>
+                   <span><strong>Oportunidad:</strong> La "Milanesa Napolitana" es Top Seller. Se sugiere agregar variante "A Caballo" (huevo frito) por bajo costo marginal y alto valor percibido.</span>
+                 </li>
+               </ul>
+            </div>
+
+            {/* Estacionalidad */}
+            <div className={`${glassCard} p-6 rounded-2xl md:col-span-2`}>
+               <h3 className="text-emerald-400 font-bold flex items-center gap-2 mb-4"><Leaf className="w-5 h-5" /> Eficiencia Estacional</h3>
+               <p className="text-slate-300 text-sm mb-3">
+                 Detectamos transición a Temporada Alta en tu zona (Villa Gesell). El histórico indica pico de demanda entre 21:00 y 23:30.
+               </p>
+               <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex justify-between items-center">
+                 <div className="text-emerald-300 text-sm"><strong>Recomendación:</strong> Extender horario de cocina 1 hora (hasta 01:00 AM) viernes y sábados.</div>
+                 <div className="text-emerald-400 font-bold">+15% Ingresos Proyectados</div>
+               </div>
+            </div>
+          </div>
         </motion.div>
       )}
     </div>
@@ -288,7 +430,6 @@ const DemoApp: FC<{ onExit: () => void }> = ({ onExit }) => {
         onClose={() => setIsSidebarOpen(false)}
       />
       
-      {/* Contenido Principal con margen adaptable */}
       <main className="flex-1 md:ml-64 p-4 md:p-8 relative z-10 pt-16 md:pt-8 overflow-y-auto h-screen">
         <AnimatePresence mode='wait'>
           <motion.div

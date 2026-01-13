@@ -6,7 +6,7 @@ import {
   LayoutDashboard, ShoppingCart, Settings, LogOut, Search, 
   AlertTriangle, FileText, Zap, BarChart3, Terminal, Menu, X,
   Users, Calendar, TrendingDown, Leaf, Layers, Plus, Trash2, 
-  CheckCircle2, Grid3x3, Building, GraduationCap, ShieldCheck, Eye
+  CheckCircle2, Grid3x3, Building, GraduationCap, ShieldCheck, Eye, CreditCard
 } from 'lucide-react';
 
 // ==========================================
@@ -15,17 +15,6 @@ import {
 
 const glassCard = "bg-slate-900/70 backdrop-blur-xl border border-white/10 shadow-2xl";
 
-// Variantes de Animación
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
-};
-
 // ==========================================
 // 1. COMPONENTES DE LA SUITE (DEMO)
 // ==========================================
@@ -33,7 +22,7 @@ const itemVariants = {
 enum View { DASHBOARD, POS, TABLES, RENTALS, SCHOOL, VISION, FISCAL }
 
 const themes = {
-  [View.DASHBOARD]: { color: 'text-cyan-400', border: 'border-cyan-500', bg: 'bg-cyan-500/10' },
+  [View.DASHBOARD]: { color: 'text-amber-400', border: 'border-amber-500', bg: 'bg-amber-500/10' },
   [View.POS]: { color: 'text-emerald-400', border: 'border-emerald-500', bg: 'bg-emerald-500/10' },
   [View.TABLES]: { color: 'text-orange-400', border: 'border-orange-500', bg: 'bg-orange-500/10' },
   [View.RENTALS]: { color: 'text-rose-400', border: 'border-rose-500', bg: 'bg-rose-500/10' },
@@ -42,334 +31,296 @@ const themes = {
   [View.FISCAL]: { color: 'text-blue-400', border: 'border-blue-500', bg: 'bg-blue-500/10' },
 };
 
-// --- SUB-MÓDULO: VISION (CÁMARAS PRO) ---
-const VisionView = () => {
-  const [cameras, setCameras] = useState<{x: number, y: number, angle: number}[]>([]);
-  const addCamera = (e: React.MouseEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setCameras([...cameras, { x: e.clientX - rect.left, y: e.clientY - rect.top, angle: 45 }]);
+// --- MÓDULO: PUNTO DE VENTA (POS) ---
+const POSView = () => {
+  const [cart, setCart] = useState<{id: number, name: string, price: number, qty: number}[]>([]);
+  const products = [
+    { id: 1, name: "Café Espresso", price: 2800 },
+    { id: 2, name: "Medialuna Pro", price: 950 },
+    { id: 3, name: "Tostado Especial", price: 4800 },
+    { id: 4, name: "Jugo Natural", price: 3200 },
+    { id: 5, name: "Licuado Fruta", price: 4100 },
+    { id: 6, name: "Agua Mineral", price: 1800 },
+  ];
+
+  const addToCart = (p: any) => {
+    setCart(prev => {
+      const exists = prev.find(item => item.id === p.id);
+      if (exists) return prev.map(item => item.id === p.id ? { ...item, qty: item.qty + 1 } : item);
+      return [...prev, { ...p, qty: 1 }];
+    });
   };
 
-  return (
-    <div className="h-full flex flex-col space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">Neural <span className="text-red-500">Vision Planner</span></h2>
-        <p className="text-xs text-slate-400">Click en el plano para ubicar cámaras IP y ver rango de cobertura.</p>
-      </div>
-      <div 
-        className="relative flex-1 bg-slate-800 rounded-3xl border-2 border-dashed border-slate-700 overflow-hidden cursor-crosshair"
-        onClick={addCamera}
-      >
-        {/* Simulación de Plano */}
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(#444 1px, transparent 1px), linear-gradient(to right, #444 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-        <div className="absolute top-10 left-10 w-40 h-60 border-2 border-slate-600 rounded flex items-center justify-center text-slate-600 font-bold uppercase tracking-widest text-xs">Cocina</div>
-        <div className="absolute top-10 right-10 w-60 h-40 border-2 border-slate-600 rounded flex items-center justify-center text-slate-600 font-bold uppercase tracking-widest text-xs">Salón Principal</div>
+  const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
 
-        {cameras.map((cam, i) => (
-          <motion.div 
-            key={i} initial={{ scale: 0 }} animate={{ scale: 1 }}
-            className="absolute" style={{ left: cam.x, top: cam.y }}
-          >
-            {/* Cono de Visión */}
-            <div 
-              className="absolute w-40 h-40 bg-red-500/20" 
-              style={{ 
-                clipPath: 'polygon(0 0, 100% 40%, 100% 60%)', 
-                transform: `translate(-10px, -50%) rotate(${cam.angle}deg)`,
-                transformOrigin: 'left center'
-              }}
-            />
-            <div className="relative z-10 p-2 bg-red-500 rounded-full shadow-lg shadow-red-500/50">
-               <Camera className="w-4 h-4 text-white" />
+  return (
+    <div className="flex flex-col md:grid md:grid-cols-3 gap-6 h-full">
+      <div className={`col-span-2 ${glassCard} p-6 rounded-3xl flex flex-col`}>
+        <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2"><ShoppingCart className="text-emerald-400" /> Venta Rápida</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto">
+          {products.map(p => (
+            <motion.div 
+              key={p.id} whileTap={{ scale: 0.95 }} onClick={() => addToCart(p)}
+              className="bg-slate-950 p-4 rounded-2xl border border-white/5 hover:border-emerald-500/50 cursor-pointer transition-all group"
+            >
+              <div className="h-12 bg-slate-900 rounded-xl mb-3 flex items-center justify-center group-hover:bg-emerald-500/10"><Plus className="text-emerald-500" /></div>
+              <p className="text-white text-sm font-bold">{p.name}</p>
+              <p className="text-emerald-400 text-xs">$ {p.price}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+      <div className={`${glassCard} p-6 rounded-3xl flex flex-col justify-between border-t-4 border-emerald-500`}>
+        <div className="overflow-y-auto max-h-[50vh]">
+          <h3 className="text-white font-bold mb-4">Ticket de Venta</h3>
+          {cart.map(item => (
+            <div key={item.id} className="flex justify-between text-xs text-slate-300 mb-2 p-2 bg-white/5 rounded-lg">
+              <span>{item.qty}x {item.name}</span>
+              <span>$ {item.qty * item.price}</span>
             </div>
-          </motion.div>
-        ))}
+          ))}
+        </div>
+        <div className="pt-4 border-t border-white/10">
+          <div className="flex justify-between text-xl font-black text-white mb-4"><span>TOTAL</span><span>$ {total}</span></div>
+          <button onClick={() => setCart([])} className="w-full bg-emerald-500 text-slate-950 font-black py-4 rounded-2xl shadow-lg shadow-emerald-500/20">FACTURAR</button>
+        </div>
       </div>
     </div>
   );
 };
 
-// --- SUB-MÓDULO: ALQUILERES (FLUJO CERRADO) ---
-const RentalsView = () => {
-  const [step, setStep] = useState(0); // 0: Inicial, 1: Pago Enviado, 2: Pagado
-  const [blockedDays, setBlockedDays] = useState([5, 6, 7]);
+// --- MÓDULO: AUDITOR / DASHBOARD (CON BARRA DE CARGA) ---
+const DashboardAuditor = () => {
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [showData, setShowData] = useState(false);
 
-  const handlePayment = () => {
+  const runAuditory = () => {
+    setLoading(true);
+    setProgress(0);
+    setShowData(false);
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setLoading(false);
+          setShowData(true);
+          return 100;
+        }
+        return prev + 5;
+      });
+    }, 100);
+  };
+
+  return (
+    <div className="h-full space-y-6">
+      {!showData && !loading && (
+        <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
+          <div className="p-6 bg-amber-500/10 rounded-full border border-amber-500/20 animate-pulse"><Bot className="w-16 h-16 text-amber-500" /></div>
+          <h2 className="text-4xl font-black text-white">Auditoría Estratégica</h2>
+          <p className="text-slate-400 max-w-md">Analiza mermas, fatiga de personal y optimización de precios en un solo clic.</p>
+          <button onClick={runAuditory} className="bg-gradient-to-r from-amber-400 to-yellow-600 text-slate-950 px-10 py-5 rounded-2xl font-black text-xl shadow-xl shadow-amber-500/20">IMPULSA MI NEGOCIO!</button>
+        </div>
+      )}
+
+      {loading && (
+        <div className="flex flex-col items-center justify-center h-full space-y-4">
+          <p className="text-amber-400 font-mono text-sm animate-pulse">PROCESANDO DATOS NEURALES...</p>
+          <div className="w-64 h-3 bg-slate-800 rounded-full overflow-hidden border border-white/5">
+            <motion.div className="h-full bg-amber-500" initial={{ width: 0 }} animate={{ width: `${progress}%` }} />
+          </div>
+          <span className="text-slate-500 text-xs font-mono">{progress}% COMPLETO</span>
+        </div>
+      )}
+
+      {showData && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+             <div className={`${glassCard} p-6 rounded-3xl border-l-4 border-red-500`}>
+                <h4 className="text-red-400 text-xs font-bold uppercase">Alerta RRHH</h4>
+                <p className="text-slate-300 text-xs mt-2"><strong>Turno Crítico:</strong> "Marcos R." cierra hoy 02 AM y abre mañana 08 AM. Alto riesgo de error por fatiga. Se sugiere rotar.</p>
+             </div>
+             <div className={`${glassCard} p-6 rounded-3xl border-l-4 border-cyan-500`}>
+                <h4 className="text-cyan-400 text-xs font-bold uppercase">Optimización Menú</h4>
+                <p className="text-slate-300 text-xs mt-2">"Risotto" tiene 15% de merma. Eliminar y potenciar "Pastas" que subió 22% en demanda este mes.</p>
+             </div>
+             <div className={`${glassCard} p-6 rounded-3xl border-l-4 border-emerald-500`}>
+                <h4 className="text-emerald-400 text-xs font-bold uppercase">Estacionalidad</h4>
+                <p className="text-slate-300 text-xs mt-2">Pico de demanda detectado para viernes noche. Extender cocina 1h aumenta ingresos un 14%.</p>
+             </div>
+          </div>
+          <div className={`${glassCard} p-8 rounded-3xl text-center bg-amber-500/5`}>
+             <p className="text-amber-400 font-bold italic">"Estas mejoras se aplican a cualquier rubro: Salud, Comercio, Educación o Legal."</p>
+          </div>
+          <button onClick={() => setShowData(false)} className="text-slate-500 text-xs underline w-full text-center">Reiniciar Análisis</button>
+        </motion.div>
+      )}
+    </div>
+  );
+};
+
+// --- MÓDULO: ALQUILERES (FLUJO COMPLETO) ---
+const RentalsView = () => {
+  const [step, setStep] = useState(0); // 0: Inicio, 1: Pago, 2: Reservado
+  const [days, setDays] = useState([5, 6, 7]);
+
+  const handlePay = () => {
     setStep(1);
-    setTimeout(() => {
-        setStep(2);
-        setBlockedDays([...blockedDays, 15, 16, 17]);
-    }, 3000);
+    setTimeout(() => { setStep(2); setDays([...days, 15, 16, 17]); }, 2500);
   };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
       <div className={`${glassCard} p-6 rounded-3xl`}>
-         <h3 className="text-rose-400 font-bold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5" /> Gestión de Reservas</h3>
+         <h3 className="text-rose-400 font-bold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5" /> Calendario Enero</h3>
          <div className="grid grid-cols-7 gap-2">
-            {Array.from({length: 31}).map((_, i) => {
-               const day = i + 1;
-               const isBlocked = blockedDays.includes(day);
-               return (
-                 <motion.div 
-                    key={day} 
-                    animate={isBlocked ? { backgroundColor: 'rgba(244, 63, 94, 0.2)', borderColor: '#f43f5e' } : {}}
-                    className={`aspect-square rounded-lg flex items-center justify-center text-xs border ${isBlocked ? 'text-rose-400' : 'bg-slate-900 border-slate-800 text-slate-600'}`}
-                 >
-                   {day}
-                 </motion.div>
-               );
+            {Array.from({length: 28}).map((_, i) => {
+               const d = i + 1;
+               const block = days.includes(d);
+               return <div key={d} className={`aspect-square rounded-lg flex items-center justify-center text-[10px] border ${block ? 'bg-rose-500/20 border-rose-500 text-rose-400' : 'bg-slate-900 border-slate-800 text-slate-600'}`}>{d}</div>
             })}
          </div>
       </div>
-
       <div className={`${glassCard} p-6 rounded-3xl flex flex-col border-t-4 border-rose-500`}>
-         <div className="flex-1 space-y-4 overflow-y-auto pr-2">
-            <div className="bg-slate-800 p-3 rounded-xl rounded-tr-none ml-auto text-sm w-4/5 text-white">Hola! Tienen disponible del 15 al 17?</div>
-            <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl rounded-tl-none text-sm w-4/5 text-slate-300">
-                <Bot className="w-4 h-4 text-rose-400 mb-1" />
-                Si! Esas fechas están libres. El total es $45.000. ¿Querés reservar ahora?
+         <div className="flex-1 space-y-4">
+            <div className="bg-slate-800 p-3 rounded-2xl rounded-tr-none ml-auto text-xs w-4/5 text-white">Hola! Disponible del 15 al 17?</div>
+            <div className="bg-slate-900 border border-white/5 p-3 rounded-2xl rounded-tl-none text-xs w-4/5 text-slate-300">
+               <Bot className="w-3 h-3 text-rose-400 mb-1" /> Si! Está libre. El total es $45.000. Te envío el link:
+               <button onClick={handlePay} className="mt-2 w-full bg-blue-600 text-white py-2 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1"><CreditCard className="w-3 h-3"/> Pagar con Mercado Pago</button>
             </div>
-            {step >= 1 && (
-               <div className="bg-slate-900 border border-rose-500/30 p-3 rounded-xl rounded-tl-none text-sm w-4/5 text-slate-300">
-                  Perfecto. Te envío el link de pago seguro: <br/>
-                  <button onClick={handlePayment} className="mt-2 bg-blue-500 text-white px-3 py-1 rounded-lg text-xs font-bold block">Pagar con Mercado Pago</button>
-               </div>
-            )}
+            {step === 1 && <div className="text-center text-xs text-rose-400 animate-pulse py-4 font-mono">PROCESANDO PAGO...</div>}
             {step === 2 && (
-               <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-emerald-500/20 border border-emerald-500 p-3 rounded-xl text-sm text-emerald-300">
-                  <CheckCircle2 className="w-4 h-4 mb-1" />
-                  ¡Pago recibido! La reserva del 15 al 17 ha sido tomada. Calendario actualizado.
-               </motion.div>
+              <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="bg-emerald-500/20 border border-emerald-500 p-3 rounded-2xl text-[10px] text-emerald-400 font-bold">
+                 ¡PAGO CONFIRMADO! Fechas 15, 16 y 17 bloqueadas automáticamente.
+              </motion.div>
             )}
          </div>
-         {step === 0 && <button onClick={() => setStep(1)} className="w-full bg-rose-500 text-white py-3 rounded-xl font-bold mt-4">Simular Cliente Acepta</button>}
       </div>
     </div>
   );
 };
 
-// --- SUB-MÓDULO: COLEGIO (Ahorro de Tiempo) ---
-const SchoolView = () => {
-  return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Dirección <span className="text-indigo-400">Escolar Inteligente</span></h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-         <div className={`${glassCard} p-4 rounded-2xl`}>
-            <div className="flex justify-between items-start">
-               <Users className="text-indigo-400 w-8 h-8" />
-               <span className="text-red-400 text-[10px] font-bold">12% MORA</span>
-            </div>
-            <h4 className="text-white font-bold mt-2">Cobranzas</h4>
-            <p className="text-slate-400 text-xs mt-1 italic">IA envió recordatorios automáticos a 45 padres hoy.</p>
-         </div>
-         <div className={`${glassCard} p-4 rounded-2xl`}>
-            <div className="flex justify-between items-start">
-               <Clock className="text-indigo-400 w-8 h-8" />
-               <span className="text-emerald-400 text-[10px] font-bold">ÓPTIMO</span>
-            </div>
-            <h4 className="text-white font-bold mt-2">Horarios</h4>
-            <p className="text-slate-400 text-xs mt-1 italic">Grilla de profesores optimizada. Ahorro: 15hs de gestión mensual.</p>
-         </div>
-         <div className={`${glassCard} p-4 rounded-2xl`}>
-            <div className="flex justify-between items-start">
-               <AlertTriangle className="text-indigo-400 w-8 h-8" />
-               <span className="text-amber-400 text-[10px] font-bold">ALERTA</span>
-            </div>
-            <h4 className="text-white font-bold mt-2">Inasistencias</h4>
-            <p className="text-slate-400 text-xs mt-1 italic">Detectada anomalía en 3° Año B. Posible conflicto grupal.</p>
-         </div>
-      </div>
-      <div className={`${glassCard} p-6 rounded-3xl`}>
-         <h3 className="text-white font-bold mb-4">Optimización de Legajos</h3>
-         <div className="space-y-2">
-            {[1,2,3].map(i => (
-              <div key={i} className="flex justify-between items-center p-3 bg-slate-950/50 border border-white/5 rounded-xl">
-                 <span className="text-slate-300 text-sm">Legajo Estudiante #445{i} - Digitalizado por IA</span>
-                 <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded">SIN ERRORES</span>
-              </div>
-            ))}
-         </div>
-      </div>
-    </div>
-  );
-};
-
-// --- SUB-MÓDULO: FISCAL (Homologación AFIP) ---
-const FiscalView = () => {
-  const [status, setStatus] = useState<'idle'|'loading'|'success'>('idle');
-  const startHomologation = () => {
-    setStatus('loading');
-    setTimeout(() => setStatus('success'), 3000);
+// --- MÓDULO: VISION (CÁMARAS INTERACTIVAS) ---
+const VisionView = () => {
+  const [cams, setCams] = useState<{x: number, y: number}[]>([]);
+  const addCam = (e: any) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    setCams([...cams, { x: e.clientX - r.left, y: e.clientY - r.top }]);
   };
-
   return (
-    <div className="h-full flex flex-col items-center justify-center space-y-8">
-      <div className="text-center">
-        <h2 className="text-3xl font-bold text-white mb-2">Módulo <span className="text-blue-400">Fiscal Neural</span></h2>
-        <p className="text-slate-400">Homologación directa con servidores AFIP y gestión de certificados.</p>
-      </div>
-
-      <div className={`${glassCard} p-10 rounded-[40px] w-full max-w-md text-center relative overflow-hidden`}>
-        <AnimatePresence mode="wait">
-          {status === 'idle' && (
-            <motion.div key="idle" exit={{ opacity: 0, y: -20 }}>
-               <ShieldCheck className="w-20 h-20 text-slate-700 mx-auto mb-6" />
-               <button onClick={startHomologation} className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-blue-500/30">Vincular Punto de Venta</button>
-            </motion.div>
-          )}
-          {status === 'loading' && (
-            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-               <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
-               <p className="text-blue-400 font-mono text-sm animate-pulse">Solicitando CAEA a servidores fiscales...</p>
-            </motion.div>
-          )}
-          {status === 'success' && (
-            <motion.div key="success" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-               <CheckCircle2 className="w-20 h-20 text-emerald-400 mx-auto mb-6" />
-               <h4 className="text-white font-bold text-xl">Homologación Exitosa</h4>
-               <p className="text-slate-400 text-sm mt-2">Punto de Venta 0004 habilitado para Factura Electrónica.</p>
-               <div className="mt-6 p-3 bg-slate-950 rounded-xl font-mono text-[10px] text-emerald-500 border border-emerald-500/20 text-left">
-                  TOKEN: 449x-Z01-PHOENIX-IA <br/> STATUS: ACTIVE_CERT_VALID_2027
-               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+    <div className="h-full flex flex-col space-y-4">
+      <h2 className="text-xl font-bold text-white flex items-center gap-2"><Eye className="text-red-500" /> Vision Planner</h2>
+      <div className="flex-1 bg-slate-900 border-2 border-dashed border-slate-800 rounded-3xl relative cursor-crosshair overflow-hidden" onClick={addCam}>
+         <div className="absolute top-10 left-10 w-32 h-40 border border-slate-700 flex items-center justify-center text-[10px] text-slate-700 uppercase font-bold">Depósito</div>
+         <div className="absolute bottom-10 right-20 w-40 h-20 border border-slate-700 flex items-center justify-center text-[10px] text-slate-700 uppercase font-bold">Oficina</div>
+         {cams.map((c, i) => (
+           <div key={i} className="absolute" style={{ left: c.x - 10, top: c.y - 10 }}>
+              <div className="w-20 h-20 bg-red-500/10 absolute -top-5 -left-5 rounded-full blur-xl" />
+              <div className="bg-red-500 p-2 rounded-full relative z-10"><Camera className="w-3 h-3 text-white" /></div>
+              <div className="w-40 h-40 bg-red-500/5 absolute top-0 left-0" style={{ clipPath: 'polygon(0 0, 100% 40%, 100% 60%)', transform: 'rotate(-45deg)', transformOrigin: 'top left' }} />
+           </div>
+         ))}
       </div>
     </div>
   );
 };
+
+// --- MÓDULO: FISCAL ---
+const FiscalView = () => {
+  const [stat, setStat] = useState(0);
+  return (
+    <div className="h-full flex flex-col items-center justify-center text-center">
+       <ShieldCheck className={`w-20 h-20 mb-6 ${stat === 2 ? 'text-emerald-400' : 'text-slate-700'}`} />
+       <h2 className="text-2xl font-bold text-white mb-2">Homologación Fiscal AFIP</h2>
+       <p className="text-slate-500 text-sm max-w-xs mb-8">Vinculación directa de puntos de venta con certificados de seguridad nivel 3.</p>
+       {stat === 0 && <button onClick={() => {setStat(1); setTimeout(()=>setStat(2), 2000)}} className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold">VINCULAR PUNTO DE VENTA</button>}
+       {stat === 1 && <p className="text-blue-400 font-mono text-xs animate-pulse">SOLICITANDO CAEA...</p>}
+       {stat === 2 && <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 font-mono text-[10px]">CERT_TOKEN: PHX-AFIP-2026-ACTIVE</div>}
+    </div>
+  );
+};
+
+// --- MÓDULO: COLEGIO ---
+const SchoolView = () => (
+  <div className="space-y-6">
+    <h2 className="text-xl font-bold text-white flex items-center gap-2"><GraduationCap className="text-indigo-400"/> Gestión Directiva</h2>
+    <div className="grid grid-cols-2 gap-4">
+       <div className={`${glassCard} p-4 rounded-2xl`}><Users className="text-indigo-400 mb-2"/><h4 className="text-white text-sm font-bold">Mora Mensual</h4><div className="text-2xl font-bold text-red-400">12.5%</div><p className="text-[10px] text-slate-500">Recordatorios IA enviados</p></div>
+       <div className={`${glassCard} p-4 rounded-2xl`}><Clock className="text-indigo-400 mb-2"/><h4 className="text-white text-sm font-bold">Optimización</h4><div className="text-2xl font-bold text-emerald-400">+15hs</div><p className="text-[10px] text-slate-500">Ahorro en grilla docente</p></div>
+    </div>
+  </div>
+);
 
 // ==========================================
 // 2. APLICACIÓN PRINCIPAL
 // ==========================================
 
 export default function App() {
-  const [isDemoMode, setIsDemoMode] = useState(false);
-  const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  // --- SUB-MÓDULO: AUDITOR (CONSULTOR ESTRATÉGICO) ---
-  const AuditorSection = () => (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
-      <div className={`${glassCard} p-6 rounded-3xl border-l-4 border-amber-500`}>
-         <h3 className="text-amber-400 font-bold flex items-center gap-2 mb-4 font-mono text-sm"><Terminal className="w-4 h-4" /> AI_STRATEGY_REPORT_v4</h3>
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-               <div className="p-4 bg-slate-950 rounded-2xl border border-white/5">
-                  <span className="text-red-400 text-[10px] font-bold">ALERTA RRHH</span>
-                  <p className="text-slate-300 text-xs mt-1">El empleado "Marcos R." tiene turno mañana mañana, pero cierra hoy a las 02:00 AM. <strong>Alto riesgo de error por fatiga.</strong> Se sugiere re-asignar.</p>
-               </div>
-               <div className="p-4 bg-slate-950 rounded-2xl border border-white/5">
-                  <span className="text-cyan-400 text-[10px] font-bold">OPTIMIZACIÓN MENÚ</span>
-                  <p className="text-slate-300 text-xs mt-1">El producto "Risotto de Hongos" tiene 12% de merma. Eliminar de carta y potenciar "Pastas Caseras" que subió 20% en demanda.</p>
-               </div>
-            </div>
-            <div className="space-y-4">
-               <div className="p-4 bg-slate-950 rounded-2xl border border-white/5">
-                  <span className="text-emerald-400 text-[10px] font-bold">ESTACIONALIDAD</span>
-                  <p className="text-slate-300 text-xs mt-1">Transición a temporada alta detectada. Extender horario de atención los viernes mejora ingresos proyectados en 18%.</p>
-               </div>
-               <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-center h-20">
-                  <p className="text-amber-400 font-bold text-center text-xs">Estas mejoras se aplican a cualquier rubro: <br/>Salud, Legal, Educación, Comercio.</p>
-               </div>
-            </div>
-         </div>
-      </div>
-    </motion.div>
-  );
+  const [isDemo, setIsDemo] = useState(false);
+  const [view, setView] = useState<View>(View.DASHBOARD);
 
   const renderView = () => {
-    switch (currentView) {
-      case View.DASHBOARD: return (
-        <div className="space-y-8">
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className={`${glassCard} p-6 rounded-3xl`}><h4 className="text-slate-500 text-xs font-bold uppercase mb-2">Ingresos</h4><div className="text-3xl font-bold text-white">$ 2.450.000</div><div className="h-1 w-full bg-cyan-500 mt-4 rounded-full" /></div>
-              <div className={`${glassCard} p-6 rounded-3xl`}><h4 className="text-slate-500 text-xs font-bold uppercase mb-2">Eficiencia</h4><div className="text-3xl font-bold text-white">94.2%</div><div className="h-1 w-full bg-emerald-500 mt-4 rounded-full" /></div>
-              <div className={`${glassCard} p-6 rounded-3xl`}><h4 className="text-slate-500 text-xs font-bold uppercase mb-2">Neural Load</h4><div className="text-3xl font-bold text-white">8ms</div><div className="h-1 w-full bg-amber-500 mt-4 rounded-full" /></div>
-           </div>
-           <AuditorSection />
-        </div>
-      );
+    switch(view) {
+      case View.DASHBOARD: return <DashboardAuditor />;
       case View.POS: return <POSView />;
       case View.TABLES: return (
         <div className="h-full flex flex-col items-center justify-center">
-           <h2 className="text-xl font-bold text-white mb-8">Mapa de Mesas (Click para facturar)</h2>
-           <div className="grid grid-cols-3 gap-8">
-              {[1,2,3,4,5,6,7,8,9].map(i => (
-                <motion.div 
-                  key={i} whileHover={{ scale: 1.1 }} onClick={() => setCurrentView(View.POS)}
-                  className="w-20 h-20 bg-slate-800 rounded-full border-2 border-slate-600 flex items-center justify-center text-white font-bold cursor-pointer hover:border-orange-500"
-                >
-                  {i}
-                </motion.div>
-              ))}
-           </div>
+          <h2 className="text-white font-bold mb-10">Mapa de Mesas (Click para facturar)</h2>
+          <div className="grid grid-cols-3 gap-8">
+             {[1,2,3,4,5,6].map(i => (
+               <motion.div key={i} whileHover={{scale: 1.1}} onClick={() => setView(View.POS)} className="w-20 h-20 rounded-full border-2 border-slate-700 bg-slate-900 flex items-center justify-center text-white font-bold cursor-pointer hover:border-orange-500">{i}</motion.div>
+             ))}
+          </div>
         </div>
       );
       case View.RENTALS: return <RentalsView />;
       case View.SCHOOL: return <SchoolView />;
       case View.VISION: return <VisionView />;
       case View.FISCAL: return <FiscalView />;
-      default: return null;
     }
   };
 
   return (
-    <AnimatePresence mode="wait">
-      {isDemoMode ? (
-        <motion.div key="demo" className="flex min-h-screen bg-slate-950 text-slate-100 font-sans">
-          {/* Sidebar */}
-          <aside className="w-64 bg-slate-950 border-r border-slate-800 p-6 hidden md:flex flex-col justify-between">
-            <div className="space-y-8">
-               <div className="flex items-center gap-2"><img src="/logo-phoenix.png" className="h-8" /><span className="font-bold">SUITE</span></div>
-               <nav className="space-y-2">
-                 {[
-                   { id: View.DASHBOARD, name: 'Dashboard', icon: LayoutDashboard },
-                   { id: View.POS, name: 'Punto de Venta', icon: ShoppingCart },
-                   { id: View.TABLES, name: 'Mesas', icon: Grid3x3 },
-                   { id: View.RENTALS, name: 'Alquileres', icon: Building },
-                   { id: View.SCHOOL, name: 'Colegio', icon: GraduationCap },
-                   { id: View.VISION, name: 'Vision IA', icon: Eye },
-                   { id: View.FISCAL, name: 'Fis-cal', icon: ShieldCheck },
-                 ].map(item => (
-                   <button 
-                    key={item.id} onClick={() => setCurrentView(item.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${currentView === item.id ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-slate-400 hover:bg-slate-900'}`}
-                   >
-                     <item.icon className="w-4 h-4" /> <span className="text-sm font-medium">{item.name}</span>
-                   </button>
-                 ))}
-               </nav>
-            </div>
-            <button onClick={() => setIsDemoMode(false)} className="text-red-400 flex items-center gap-2 text-sm"><LogOut className="w-4 h-4" /> Salir</button>
-          </aside>
-
-          {/* Main Content */}
-          <main className="flex-1 p-8 overflow-y-auto">
-             {renderView()}
-          </main>
-        </motion.div>
+    <div className="bg-slate-950 text-slate-100 min-h-screen selection:bg-cyan-500/30">
+      {!isDemo ? (
+        <div className="flex flex-col items-center justify-center h-screen text-center px-6">
+           <img src="/logo-phoenix.png" className="h-16 mb-10" />
+           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-6xl md:text-8xl font-black tracking-tighter mb-6">EVOLUCIONAMOS <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">TU NEGOCIO.</span></motion.h1>
+           <p className="max-w-xl text-slate-400 text-lg mb-10">Inteligencia Artificial aplicada para ahorrar tiempo y dinero en cualquier rubro.</p>
+           <div className="flex gap-4">
+              <button onClick={() => setIsDemo(true)} className="bg-cyan-500 text-slate-950 px-8 py-4 rounded-2xl font-black flex items-center gap-2 hover:scale-105 transition-all"><LayoutDashboard className="w-5 h-5"/> PROBAR DEMO INTERACTIVA</button>
+              <a href="https://wa.me/542255605257" className="bg-white/5 border border-white/10 px-8 py-4 rounded-2xl font-bold flex items-center gap-2">WHATSAPP</a>
+           </div>
+        </div>
       ) : (
-        <motion.div key="landing" className="bg-slate-950 text-white min-h-screen">
-          {/* Hero Simplificado para Landing */}
-          <nav className="fixed top-0 w-full h-20 flex items-center justify-between px-10 border-b border-white/5 backdrop-blur-md z-50">
-             <div className="flex items-center gap-2"><img src="/logo-phoenix.png" className="h-8" /><span className="font-black uppercase tracking-tighter">Phoenix <span className="text-cyan-400">IA</span></span></div>
-             <button onClick={() => setIsDemoMode(true)} className="bg-cyan-500/10 text-cyan-400 px-4 py-2 rounded-lg border border-cyan-500/30 text-xs font-bold uppercase tracking-widest hover:bg-cyan-500/20 transition-all">Live Demo</button>
-          </nav>
-          
-          <div className="flex flex-col items-center justify-center h-screen text-center px-6">
-             <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-5xl md:text-8xl font-black leading-tight tracking-tighter">
-                EVOLUCIONAMOS <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">TU NEGOCIO.</span>
-             </motion.h1>
-             <p className="max-w-xl text-slate-400 mt-6 text-lg">Impulsamos la rentabilidad mediante Inteligencia Artificial aplicada a cualquier rubro en la costa.</p>
-             <div className="mt-10 flex gap-4">
-                <button onClick={() => setIsDemoMode(true)} className="bg-cyan-500 text-slate-950 px-8 py-4 rounded-xl font-bold flex items-center gap-2"><LayoutDashboard className="w-5 h-5" /> Probar Demo Interactiva</button>
-                <a href="https://wa.me/542255605257" className="bg-white/5 border border-white/10 px-8 py-4 rounded-xl font-bold flex items-center gap-2"><MessageCircle className="w-5 h-5" /> Consultar</a>
-             </div>
-          </div>
-        </motion.div>
+        <div className="flex h-screen">
+           <aside className="w-64 bg-slate-950 border-r border-slate-800 p-6 hidden md:flex flex-col justify-between">
+              <div className="space-y-8">
+                 <div className="flex items-center gap-2"><img src="/logo-phoenix.png" className="h-8" /><span className="font-bold">SUITE</span></div>
+                 <nav className="space-y-2">
+                    {[
+                      { id: View.DASHBOARD, name: 'Dashboard Auditor', icon: LayoutDashboard },
+                      { id: View.POS, name: 'POS Gastronomía', icon: ShoppingCart },
+                      { id: View.TABLES, name: 'Mesas', icon: Grid3x3 },
+                      { id: View.RENTALS, name: 'Alquileres', icon: Building },
+                      { id: View.SCHOOL, name: 'Colegio', icon: GraduationCap },
+                      { id: View.VISION, name: 'Vision IA', icon: Eye },
+                      { id: View.FISCAL, name: 'Fiscal AFIP', icon: ShieldCheck },
+                    ].map(item => (
+                      <button 
+                        key={item.id} onClick={() => setView(item.id)}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${view === item.id ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-slate-400 hover:bg-slate-900'}`}
+                      >
+                        <item.icon className="w-4 h-4" /> {item.name}
+                      </button>
+                    ))}
+                 </nav>
+              </div>
+              <button onClick={() => setIsDemo(false)} className="text-red-400 flex items-center gap-2 text-sm"><LogOut className="w-4 h-4" /> Salir</button>
+           </aside>
+           <main className="flex-1 p-4 md:p-8 overflow-y-auto">{renderView()}</main>
+        </div>
       )}
-    </AnimatePresence>
+    </div>
   );
 }

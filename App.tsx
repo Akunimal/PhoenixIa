@@ -4,645 +4,370 @@ import {
   Server, BrainCircuit, ArrowRight, MapPin, Camera, 
   Cpu, Wifi, MessageCircle, TrendingUp, Clock, Bot,
   LayoutDashboard, ShoppingCart, Settings, LogOut, Search, 
-  AlertTriangle, FileText, Zap, ChevronRight, BarChart3, Terminal, Menu, X,
-  Users, Calendar, TrendingDown, Leaf, Layers, Plus, Trash2, CheckCircle2,
-  Grid3x3, Building, Stethoscope, Scale, ShieldCheck, User, FileWarning
+  AlertTriangle, FileText, Zap, BarChart3, Terminal, Menu, X,
+  Users, Calendar, TrendingDown, Leaf, Layers, Plus, Trash2, 
+  CheckCircle2, Grid3x3, Building, GraduationCap, ShieldCheck, Eye
 } from 'lucide-react';
 
 // ==========================================
-// 0. ESTILOS GLOBALES Y UTILIDADES
+// 0. ESTILOS Y UTILIDADES
 // ==========================================
 
-const glassCard = "bg-slate-900/60 backdrop-blur-md border border-white/5 shadow-xl";
+const glassCard = "bg-slate-900/70 backdrop-blur-xl border border-white/10 shadow-2xl";
 
 // Variantes de Animación
-const fadeInScale = {
-  hidden: { opacity: 0, scale: 0.98 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.4, ease: "easeOut" } }
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
 };
 
-const useTypewriter = (text: string, speed: number = 20, start: boolean = false) => {
-  const [displayText, setDisplayText] = useState('');
-  useEffect(() => {
-    if (!start) {
-        setDisplayText('');
-        return;
-    }
-    let i = 0;
-    setDisplayText('');
-    const timer = setInterval(() => {
-      if (i < text.length) {
-        setDisplayText((prev) => prev + text.charAt(i));
-        i++;
-      } else {
-        clearInterval(timer);
-      }
-    }, speed);
-    return () => clearInterval(timer);
-  }, [text, speed, start]);
-  return displayText;
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
 };
 
 // ==========================================
-// 1. COMPONENTES DEL DASHBOARD / DEMO
+// 1. COMPONENTES DE LA SUITE (DEMO)
 // ==========================================
 
-enum View { DASHBOARD, POS, TABLES, RENTALS, DENTIST, LEGAL, CONFIG }
+enum View { DASHBOARD, POS, TABLES, RENTALS, SCHOOL, VISION, FISCAL }
 
 const themes = {
-  [View.DASHBOARD]: { color: 'text-cyan-400', border: 'border-cyan-500/30', bg: 'bg-cyan-500/10' },
-  [View.POS]: { color: 'text-emerald-400', border: 'border-emerald-500/30', bg: 'bg-emerald-500/10' },
-  [View.TABLES]: { color: 'text-orange-400', border: 'border-orange-500/30', bg: 'bg-orange-500/10' },
-  [View.RENTALS]: { color: 'text-rose-400', border: 'border-rose-500/30', bg: 'bg-rose-500/10' },
-  [View.DENTIST]: { color: 'text-blue-400', border: 'border-blue-500/30', bg: 'bg-blue-500/10' },
-  [View.LEGAL]: { color: 'text-indigo-400', border: 'border-indigo-500/30', bg: 'bg-indigo-500/10' },
-  [View.CONFIG]: { color: 'text-violet-400', border: 'border-violet-500/30', bg: 'bg-violet-500/10' },
+  [View.DASHBOARD]: { color: 'text-cyan-400', border: 'border-cyan-500', bg: 'bg-cyan-500/10' },
+  [View.POS]: { color: 'text-emerald-400', border: 'border-emerald-500', bg: 'bg-emerald-500/10' },
+  [View.TABLES]: { color: 'text-orange-400', border: 'border-orange-500', bg: 'bg-orange-500/10' },
+  [View.RENTALS]: { color: 'text-rose-400', border: 'border-rose-500', bg: 'bg-rose-500/10' },
+  [View.SCHOOL]: { color: 'text-indigo-400', border: 'border-indigo-500', bg: 'bg-indigo-500/10' },
+  [View.VISION]: { color: 'text-red-400', border: 'border-red-500', bg: 'bg-red-500/10' },
+  [View.FISCAL]: { color: 'text-blue-400', border: 'border-blue-500', bg: 'bg-blue-500/10' },
 };
 
-const Sidebar: FC<{ currentView: View; onNavigate: (v: View) => void; onExit: () => void; isOpen: boolean; onClose: () => void }> = ({ currentView, onNavigate, onExit, isOpen, onClose }) => {
-  const t = themes[currentView] || themes[View.DASHBOARD];
-  
-  const menuItems = [
-    { id: View.DASHBOARD, label: 'Dashboard General', icon: LayoutDashboard },
-    { id: View.POS, label: 'POS Gastronomía', icon: ShoppingCart },
-    { id: View.TABLES, label: 'Mapa de Mesas', icon: Grid3x3 },
-    { id: View.RENTALS, label: 'Alquileres / Hotel', icon: Building },
-    { id: View.DENTIST, label: 'Salud (Dentista)', icon: Stethoscope },
-    { id: View.LEGAL, label: 'Legales (Abogados)', icon: Scale },
-  ];
-
-  const sidebarClasses = `
-    fixed inset-y-0 left-0 z-50 w-64 bg-slate-950 border-r border-slate-800 p-4 flex flex-col justify-between transition-transform duration-300
-    ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-    md:translate-x-0 overflow-y-auto
-  `;
+// --- SUB-MÓDULO: VISION (CÁMARAS PRO) ---
+const VisionView = () => {
+  const [cameras, setCameras] = useState<{x: number, y: number, angle: number}[]>([]);
+  const addCamera = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setCameras([...cameras, { x: e.clientX - rect.left, y: e.clientY - rect.top, angle: 45 }]);
+  };
 
   return (
-    <>
-      {isOpen && <div className="fixed inset-0 bg-black/80 z-40 md:hidden backdrop-blur-sm" onClick={onClose} />}
+    <div className="h-full flex flex-col space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-white">Neural <span className="text-red-500">Vision Planner</span></h2>
+        <p className="text-xs text-slate-400">Click en el plano para ubicar cámaras IP y ver rango de cobertura.</p>
+      </div>
+      <div 
+        className="relative flex-1 bg-slate-800 rounded-3xl border-2 border-dashed border-slate-700 overflow-hidden cursor-crosshair"
+        onClick={addCamera}
+      >
+        {/* Simulación de Plano */}
+        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(#444 1px, transparent 1px), linear-gradient(to right, #444 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+        <div className="absolute top-10 left-10 w-40 h-60 border-2 border-slate-600 rounded flex items-center justify-center text-slate-600 font-bold uppercase tracking-widest text-xs">Cocina</div>
+        <div className="absolute top-10 right-10 w-60 h-40 border-2 border-slate-600 rounded flex items-center justify-center text-slate-600 font-bold uppercase tracking-widest text-xs">Salón Principal</div>
 
-      <aside className={sidebarClasses}>
-        <div>
-          <div className="flex items-center justify-between mb-8 px-2">
-            <div className="flex items-center gap-2">
-              <img src="/logo-phoenix.png" alt="Logo" className="h-8 w-auto" />
-              <span className="font-bold text-white tracking-tight text-sm">PHOENIX <span className={`transition-colors duration-500 ${t.color}`}>SUITE</span></span>
+        {cameras.map((cam, i) => (
+          <motion.div 
+            key={i} initial={{ scale: 0 }} animate={{ scale: 1 }}
+            className="absolute" style={{ left: cam.x, top: cam.y }}
+          >
+            {/* Cono de Visión */}
+            <div 
+              className="absolute w-40 h-40 bg-red-500/20" 
+              style={{ 
+                clipPath: 'polygon(0 0, 100% 40%, 100% 60%)', 
+                transform: `translate(-10px, -50%) rotate(${cam.angle}deg)`,
+                transformOrigin: 'left center'
+              }}
+            />
+            <div className="relative z-10 p-2 bg-red-500 rounded-full shadow-lg shadow-red-500/50">
+               <Camera className="w-4 h-4 text-white" />
             </div>
-            <button onClick={onClose} className="md:hidden text-slate-400 hover:text-white">
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-
-          <nav className="space-y-1">
-            {menuItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => { onNavigate(item.id); onClose(); }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-sm ${
-                  currentView === item.id 
-                  ? `${t.bg} ${t.color} border ${t.border}` 
-                  : 'text-slate-400 hover:bg-slate-900 hover:text-white'
-                }`}
-              >
-                <item.icon className="w-4 h-4" />
-                <span className="font-medium">{item.label}</span>
-              </button>
-            ))}
-          </nav>
-        </div>
-        <button onClick={onExit} className="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-950/30 rounded-xl transition-all border border-transparent hover:border-red-900/50 mt-4 text-sm">
-          <LogOut className="w-4 h-4" />
-          <span>Salir de Demo</span>
-        </button>
-      </aside>
-    </>
-  );
-};
-
-// --- VISTAS DEL DEMO ---
-
-const DashboardView = () => {
-  const t = themes[View.DASHBOARD];
-  return (
-    <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.1 } } }} className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-2">
-        <h2 className="text-2xl md:text-3xl font-bold text-white">Tablero de <span className={t.color}>Control</span></h2>
-        <span className="text-slate-500 text-sm font-mono">Estado: Online</span>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className={`${glassCard} p-6 rounded-2xl border-l-4 border-cyan-500`}>
-           <h3 className="text-slate-400 text-xs font-bold uppercase mb-2">Ventas Totales</h3>
-           <div className="text-3xl font-bold text-white">$ 1.2M</div>
-           <div className="text-cyan-400 text-xs mt-2 font-bold">+15% vs mes anterior</div>
-        </div>
-        <div className={`${glassCard} p-6 rounded-2xl border-l-4 border-emerald-500`}>
-           <h3 className="text-slate-400 text-xs font-bold uppercase mb-2">Transacciones</h3>
-           <div className="text-3xl font-bold text-white">450</div>
-           <div className="text-emerald-400 text-xs mt-2 font-bold">98% Satisfacción</div>
-        </div>
-        <div className={`${glassCard} p-6 rounded-2xl border-l-4 border-amber-500`}>
-           <h3 className="text-slate-400 text-xs font-bold uppercase mb-2">Auditoría IA</h3>
-           <div className="text-3xl font-bold text-white">3</div>
-           <div className="text-amber-400 text-xs mt-2 font-bold">Alertas Activas</div>
-        </div>
-      </div>
-      
-      <div className={`${glassCard} p-8 rounded-2xl text-center`}>
-         <Bot className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-         <h3 className="text-white text-lg font-bold">Selecciona un Módulo del Menú</h3>
-         <p className="text-slate-400 text-sm mt-2">Explora las soluciones específicas para cada industria.</p>
-      </div>
-    </motion.div>
-  );
-};
-
-// 1. POS FUNCTIONAL (Gastronomía)
-interface CartItem { id: number; name: string; price: number; quantity: number; }
-const POSView = () => {
-  const t = themes[View.POS];
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const products = [
-    { id: 1, name: "Café Espresso", price: 2800 },
-    { id: 2, name: "Medialuna", price: 900 },
-    { id: 3, name: "Tostado J&Q", price: 4500 },
-    { id: 4, name: "Jugo Naranja", price: 3200 },
-    { id: 5, name: "Licuado Fruta", price: 3800 },
-    { id: 6, name: "Agua Mineral", price: 2000 },
-  ];
-  const addToCart = (product: any) => {
-    setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      return existing ? prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item) : [...prev, { ...product, quantity: 1 }];
-    });
-  };
-  const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const handleCheckout = () => {
-    setIsProcessing(true);
-    setTimeout(() => { setCart([]); setIsProcessing(false); }, 1500);
-  };
-
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col md:grid md:grid-cols-3 gap-6 h-auto md:h-[85vh]">
-      <div className={`col-span-2 ${glassCard} rounded-2xl p-4 md:p-6 flex flex-col order-2 md:order-1`}>
-         <h2 className="text-xl font-bold text-white mb-6">Punto de Venta <span className={t.color}>Rápido</span></h2>
-         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 overflow-y-auto pr-2 custom-scrollbar">
-            {products.map(product => (
-              <motion.div key={product.id} whileTap={{ scale: 0.95 }} onClick={() => addToCart(product)} className={`bg-slate-950/80 p-4 rounded-xl border border-white/5 hover:${t.border} cursor-pointer transition-all group`}>
-                <div className="h-12 bg-slate-900 rounded-lg mb-2 flex items-center justify-center group-hover:bg-emerald-500/10"><Camera className="text-slate-600 group-hover:text-emerald-400 w-5 h-5" /></div>
-                <p className="text-white font-medium text-sm truncate">{product.name}</p>
-                <p className={`${t.color} font-bold text-sm`}>$ {product.price}</p>
-              </motion.div>
-            ))}
-         </div>
-      </div>
-      <div className={`col-span-1 ${glassCard} rounded-2xl p-4 md:p-6 flex flex-col border-t-4 ${t.border.replace('/30','')} order-1 md:order-2`}>
-         <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
-           {cart.length === 0 ? <div className="text-center text-slate-600 mt-10 text-sm">Carrito vacío.</div> : cart.map(item => (
-             <div key={item.id} className="flex justify-between text-slate-300 text-sm p-2 bg-slate-900/50 rounded-lg"><span>{item.quantity}x {item.name}</span><span>$ {item.price * item.quantity}</span></div>
-           ))}
-         </div>
-         <div className="mt-4 pt-4 border-t border-white/10">
-           <div className="flex justify-between items-end mb-4"><span className="text-slate-400">Total</span><span className="text-2xl font-bold text-white">$ {total.toLocaleString()}</span></div>
-           <motion.button onClick={handleCheckout} disabled={cart.length === 0 || isProcessing} whileTap={{ scale: 0.98 }} className={`w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2`}>
-             {isProcessing ? <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" /> : <><CheckCircle2 className="w-5 h-5" /> Cobrar</>}
-           </motion.button>
-         </div>
-      </div>
-    </motion.div>
-  );
-};
-
-// 2. MAPA DE MESAS (Nuevo)
-const TablesView = () => {
-  const [tables, setTables] = useState(Array.from({ length: 9 }).map((_, i) => ({ id: i + 1, status: i % 3 === 0 ? 'occupied' : 'free' })));
-  const toggleTable = (id: number) => {
-    setTables(prev => prev.map(t => t.id === id ? { ...t, status: t.status === 'free' ? 'occupied' : 'free' } : t));
-  };
-
-  return (
-    <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-white">Mapa de <span className="text-orange-400">Mesas</span></h2>
-        <div className="flex gap-4 text-xs">
-          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-slate-700 border border-slate-500"></div> Libre</div>
-          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-orange-500/20 border border-orange-500"></div> Ocupada</div>
-        </div>
-      </div>
-      <div className={`${glassCard} p-8 rounded-2xl flex-1 relative overflow-hidden`}>
-        <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-        <div className="grid grid-cols-3 gap-8 max-w-lg mx-auto relative z-10">
-          {tables.map(table => (
-            <motion.div
-              key={table.id}
-              onClick={() => toggleTable(table.id)}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className={`aspect-square rounded-full flex items-center justify-center cursor-pointer border-2 transition-all shadow-lg ${
-                table.status === 'free' 
-                ? 'bg-slate-800 border-slate-600 text-slate-400 hover:border-white' 
-                : 'bg-orange-500/20 border-orange-500 text-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.3)]'
-              }`}
-            >
-              <span className="font-bold text-lg">{table.id}</span>
-            </motion.div>
-          ))}
-        </div>
-        <p className="text-center text-slate-500 mt-10 text-sm">Click en una mesa para cambiar su estado.</p>
+          </motion.div>
+        ))}
       </div>
     </div>
   );
 };
 
-// 3. ALQUILERES + CHATBOT (Nuevo)
+// --- SUB-MÓDULO: ALQUILERES (FLUJO CERRADO) ---
 const RentalsView = () => {
-  const [messages, setMessages] = useState<{role: 'user'|'ai', text: string}[]>([
-    { role: 'user', text: "Hola, tenés disponibilidad para 4 personas del 10 al 15 de enero?" }
-  ]);
-  const [isTyping, setIsTyping] = useState(true);
+  const [step, setStep] = useState(0); // 0: Inicial, 1: Pago Enviado, 2: Pagado
+  const [blockedDays, setBlockedDays] = useState([5, 6, 7]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setMessages(prev => [...prev, { 
-        role: 'ai', 
-        text: "Hola! 👋 Revisé el calendario. Lamentablemente del 10 al 15 está todo ocupado. \n\nTengo disponibilidad a partir del 17 de enero. ¿Te sirve esa fecha?" 
-      }]);
-      setIsTyping(false);
-    }, 2500);
-    return () => clearTimeout(timer);
-  }, []);
+  const handlePayment = () => {
+    setStep(1);
+    setTimeout(() => {
+        setStep(2);
+        setBlockedDays([...blockedDays, 15, 16, 17]);
+    }, 3000);
+  };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-[80vh]">
-      <div className={`${glassCard} p-6 rounded-2xl flex flex-col`}>
-         <h3 className="text-rose-400 font-bold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5" /> Calendario Enero</h3>
-         <div className="grid grid-cols-7 gap-2 text-center text-sm text-slate-400 mb-2">
-            <div>D</div><div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div>
-         </div>
-         <div className="grid grid-cols-7 gap-2 flex-1">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+      <div className={`${glassCard} p-6 rounded-3xl`}>
+         <h3 className="text-rose-400 font-bold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5" /> Gestión de Reservas</h3>
+         <div className="grid grid-cols-7 gap-2">
             {Array.from({length: 31}).map((_, i) => {
                const day = i + 1;
-               const isOccupied = (day >= 5 && day <= 15);
+               const isBlocked = blockedDays.includes(day);
                return (
-                 <div key={day} className={`aspect-square rounded-lg flex items-center justify-center text-sm border ${
-                    isOccupied ? 'bg-rose-500/20 border-rose-500 text-rose-300' : 'bg-slate-900 border-slate-800 text-slate-500'
-                 }`}>
+                 <motion.div 
+                    key={day} 
+                    animate={isBlocked ? { backgroundColor: 'rgba(244, 63, 94, 0.2)', borderColor: '#f43f5e' } : {}}
+                    className={`aspect-square rounded-lg flex items-center justify-center text-xs border ${isBlocked ? 'text-rose-400' : 'bg-slate-900 border-slate-800 text-slate-600'}`}
+                 >
                    {day}
-                 </div>
-               )
+                 </motion.div>
+               );
             })}
          </div>
       </div>
-      
-      <div className={`${glassCard} p-6 rounded-2xl flex flex-col relative overflow-hidden border-t-4 border-rose-500`}>
-         <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
-            <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center"><Bot className="w-6 h-6 text-rose-400" /></div>
-            <div>
-               <h4 className="text-white font-bold">Auto-Respuesta IA</h4>
-               <p className="text-xs text-rose-400">Simulación WhatsApp Business</p>
+
+      <div className={`${glassCard} p-6 rounded-3xl flex flex-col border-t-4 border-rose-500`}>
+         <div className="flex-1 space-y-4 overflow-y-auto pr-2">
+            <div className="bg-slate-800 p-3 rounded-xl rounded-tr-none ml-auto text-sm w-4/5 text-white">Hola! Tienen disponible del 15 al 17?</div>
+            <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl rounded-tl-none text-sm w-4/5 text-slate-300">
+                <Bot className="w-4 h-4 text-rose-400 mb-1" />
+                Si! Esas fechas están libres. El total es $45.000. ¿Querés reservar ahora?
             </div>
-         </div>
-         <div className="flex-1 space-y-4">
-            {messages.map((m, i) => (
-              <motion.div initial={{ opacity: 0, x: m.role==='ai'?-20:20 }} animate={{ opacity: 1, x: 0 }} key={i} className={`p-3 rounded-xl max-w-[80%] text-sm ${
-                m.role === 'ai' ? 'bg-slate-800 text-slate-200 rounded-tl-none' : 'bg-rose-500 text-white ml-auto rounded-tr-none'
-              }`}>
-                {m.text}
-              </motion.div>
-            ))}
-            {isTyping && <div className="text-xs text-slate-500 animate-pulse">Escribiendo...</div>}
-         </div>
-      </div>
-    </div>
-  );
-};
-
-// 4. DENTISTA (Cross-Check AI)
-const DentistView = () => {
-  const [checking, setChecking] = useState(false);
-  
-  return (
-    <div className="h-full flex flex-col">
-       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-white">Clínica <span className="text-blue-400">Dental</span></h2>
-        <div className="bg-blue-500/10 border border-blue-500/30 px-3 py-1 rounded-full text-xs text-blue-300 flex items-center gap-2">
-           <ShieldCheck className="w-4 h-4" /> IA Cruzada Activa
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-         {/* Ficha Paciente */}
-         <div className={`${glassCard} p-6 rounded-2xl`}>
-            <div className="flex gap-4 items-center mb-6">
-               <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center"><User className="w-8 h-8 text-slate-400" /></div>
-               <div>
-                  <h3 className="text-xl font-bold text-white">Juan Pérez</h3>
-                  <p className="text-sm text-slate-400">ID: #8821 | Historial: Alergia Penicilina</p>
+            {step >= 1 && (
+               <div className="bg-slate-900 border border-rose-500/30 p-3 rounded-xl rounded-tl-none text-sm w-4/5 text-slate-300">
+                  Perfecto. Te envío el link de pago seguro: <br/>
+                  <button onClick={handlePayment} className="mt-2 bg-blue-500 text-white px-3 py-1 rounded-lg text-xs font-bold block">Pagar con Mercado Pago</button>
                </div>
-            </div>
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-               <label className="text-xs text-slate-500 uppercase font-bold">Tratamiento Actual</label>
-               <p className="text-white">Endodoncia Molar 38</p>
-               <label className="text-xs text-slate-500 uppercase font-bold mt-4 block">Receta Propuesta</label>
-               <div className="flex justify-between items-center">
-                  <span className="text-white font-mono">Amoxicilina 500mg</span>
-                  <button 
-                    onClick={() => setChecking(prev => !prev)}
-                    className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm transition-colors"
-                  >
-                    Validar
-                  </button>
-               </div>
-            </div>
-         </div>
-
-         {/* Panel Cross-Check */}
-         <div className={`${glassCard} p-6 rounded-2xl border-l-4 border-blue-500 relative overflow-hidden`}>
-            <h3 className="text-blue-400 font-bold mb-4 flex items-center gap-2"><BrainCircuit className="w-5 h-5" /> Verificación Cruzada</h3>
-            
-            {!checking ? (
-               <div className="text-center text-slate-500 mt-10">Esperando validación...</div>
-            ) : (
-               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                  <div className="flex justify-between items-center text-sm p-3 bg-slate-900 rounded-lg">
-                     <span className="text-slate-400">Modelo 1 (Gemini Medical)</span>
-                     <span className="text-red-400 font-bold flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> RIESGO ALTO</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm p-3 bg-slate-900 rounded-lg">
-                     <span className="text-slate-400">Modelo 2 (BioBERT)</span>
-                     <span className="text-red-400 font-bold flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> CONTRAINDICADO</span>
-                  </div>
-                  <div className="bg-red-500/10 border border-red-500 p-4 rounded-xl mt-4">
-                     <p className="text-red-300 font-bold text-sm">¡ALERTA DE SEGURIDAD!</p>
-                     <p className="text-white text-xs mt-1">El paciente es alérgico a la Penicilina (Amoxicilina). Ambas IAs bloquearon la receta.</p>
-                  </div>
+            )}
+            {step === 2 && (
+               <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-emerald-500/20 border border-emerald-500 p-3 rounded-xl text-sm text-emerald-300">
+                  <CheckCircle2 className="w-4 h-4 mb-1" />
+                  ¡Pago recibido! La reserva del 15 al 17 ha sido tomada. Calendario actualizado.
                </motion.div>
             )}
          </div>
+         {step === 0 && <button onClick={() => setStep(1)} className="w-full bg-rose-500 text-white py-3 rounded-xl font-bold mt-4">Simular Cliente Acepta</button>}
       </div>
     </div>
   );
 };
 
-// 5. LEGAL (Abogados)
-const LegalView = () => {
+// --- SUB-MÓDULO: COLEGIO (Ahorro de Tiempo) ---
+const SchoolView = () => {
   return (
-    <div className="h-full flex flex-col">
-       <h2 className="text-2xl font-bold text-white mb-6">Estudio <span className="text-indigo-400">Legal</span></h2>
-       <div className={`${glassCard} p-8 rounded-2xl flex-1`}>
-          <div className="flex items-start gap-6">
-             <div className="flex-1 bg-slate-950 p-6 rounded-xl border border-slate-800 font-mono text-xs text-slate-300 leading-relaxed">
-                <p className="mb-4 text-indigo-400 font-bold">// CONTRATO DE ALQUILER COMERCIAL (Borrador)</p>
-                <p>CLÁUSULA 4: ACTUALIZACIÓN</p>
-                <p>El canon locativo se actualizará mensualmente basado en el valor del dólar blue venta...</p>
-                <div className="my-2 h-px bg-slate-800"></div>
-                <p className="text-white bg-red-500/20 p-1 border border-red-500 rounded">CLÁUSULA 5: RENOVACIÓN AUTOMÁTICA</p>
-                <p className="bg-red-500/10">El contrato se renovará automáticamente por 5 años si el inquilino no avisa con 180 días de antelación.</p>
-             </div>
-             
-             <div className="w-1/3 space-y-4">
-                <div className="bg-indigo-500/10 border border-indigo-500/30 p-4 rounded-xl">
-                   <h4 className="text-indigo-300 font-bold text-sm mb-2 flex items-center gap-2"><FileWarning className="w-4 h-4" /> Análisis de Riesgo</h4>
-                   <p className="text-xs text-slate-300 mb-2">Se detectó una cláusula abusiva según el Código Civil y Comercial.</p>
-                   <div className="flex gap-2">
-                      <span className="text-[10px] bg-slate-800 px-2 py-1 rounded text-green-400">Verificado: LegalGPT</span>
-                      <span className="text-[10px] bg-slate-800 px-2 py-1 rounded text-green-400">Verificado: Claude-Law</span>
-                   </div>
-                </div>
-                <button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold text-sm transition-colors">Generar Redacción Alternativa</button>
-             </div>
-          </div>
-       </div>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-white">Dirección <span className="text-indigo-400">Escolar Inteligente</span></h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+         <div className={`${glassCard} p-4 rounded-2xl`}>
+            <div className="flex justify-between items-start">
+               <Users className="text-indigo-400 w-8 h-8" />
+               <span className="text-red-400 text-[10px] font-bold">12% MORA</span>
+            </div>
+            <h4 className="text-white font-bold mt-2">Cobranzas</h4>
+            <p className="text-slate-400 text-xs mt-1 italic">IA envió recordatorios automáticos a 45 padres hoy.</p>
+         </div>
+         <div className={`${glassCard} p-4 rounded-2xl`}>
+            <div className="flex justify-between items-start">
+               <Clock className="text-indigo-400 w-8 h-8" />
+               <span className="text-emerald-400 text-[10px] font-bold">ÓPTIMO</span>
+            </div>
+            <h4 className="text-white font-bold mt-2">Horarios</h4>
+            <p className="text-slate-400 text-xs mt-1 italic">Grilla de profesores optimizada. Ahorro: 15hs de gestión mensual.</p>
+         </div>
+         <div className={`${glassCard} p-4 rounded-2xl`}>
+            <div className="flex justify-between items-start">
+               <AlertTriangle className="text-indigo-400 w-8 h-8" />
+               <span className="text-amber-400 text-[10px] font-bold">ALERTA</span>
+            </div>
+            <h4 className="text-white font-bold mt-2">Inasistencias</h4>
+            <p className="text-slate-400 text-xs mt-1 italic">Detectada anomalía en 3° Año B. Posible conflicto grupal.</p>
+         </div>
+      </div>
+      <div className={`${glassCard} p-6 rounded-3xl`}>
+         <h3 className="text-white font-bold mb-4">Optimización de Legajos</h3>
+         <div className="space-y-2">
+            {[1,2,3].map(i => (
+              <div key={i} className="flex justify-between items-center p-3 bg-slate-950/50 border border-white/5 rounded-xl">
+                 <span className="text-slate-300 text-sm">Legajo Estudiante #445{i} - Digitalizado por IA</span>
+                 <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded">SIN ERRORES</span>
+              </div>
+            ))}
+         </div>
+      </div>
     </div>
   );
 };
 
-const DemoApp: FC<{ onExit: () => void }> = ({ onExit }) => {
+// --- SUB-MÓDULO: FISCAL (Homologación AFIP) ---
+const FiscalView = () => {
+  const [status, setStatus] = useState<'idle'|'loading'|'success'>('idle');
+  const startHomologation = () => {
+    setStatus('loading');
+    setTimeout(() => setStatus('success'), 3000);
+  };
+
+  return (
+    <div className="h-full flex flex-col items-center justify-center space-y-8">
+      <div className="text-center">
+        <h2 className="text-3xl font-bold text-white mb-2">Módulo <span className="text-blue-400">Fiscal Neural</span></h2>
+        <p className="text-slate-400">Homologación directa con servidores AFIP y gestión de certificados.</p>
+      </div>
+
+      <div className={`${glassCard} p-10 rounded-[40px] w-full max-w-md text-center relative overflow-hidden`}>
+        <AnimatePresence mode="wait">
+          {status === 'idle' && (
+            <motion.div key="idle" exit={{ opacity: 0, y: -20 }}>
+               <ShieldCheck className="w-20 h-20 text-slate-700 mx-auto mb-6" />
+               <button onClick={startHomologation} className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-blue-500/30">Vincular Punto de Venta</button>
+            </motion.div>
+          )}
+          {status === 'loading' && (
+            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+               <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
+               <p className="text-blue-400 font-mono text-sm animate-pulse">Solicitando CAEA a servidores fiscales...</p>
+            </motion.div>
+          )}
+          {status === 'success' && (
+            <motion.div key="success" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+               <CheckCircle2 className="w-20 h-20 text-emerald-400 mx-auto mb-6" />
+               <h4 className="text-white font-bold text-xl">Homologación Exitosa</h4>
+               <p className="text-slate-400 text-sm mt-2">Punto de Venta 0004 habilitado para Factura Electrónica.</p>
+               <div className="mt-6 p-3 bg-slate-950 rounded-xl font-mono text-[10px] text-emerald-500 border border-emerald-500/20 text-left">
+                  TOKEN: 449x-Z01-PHOENIX-IA <br/> STATUS: ACTIVE_CERT_VALID_2027
+               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
+
+// ==========================================
+// 2. APLICACIÓN PRINCIPAL
+// ==========================================
+
+export default function App() {
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // --- SUB-MÓDULO: AUDITOR (CONSULTOR ESTRATÉGICO) ---
+  const AuditorSection = () => (
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
+      <div className={`${glassCard} p-6 rounded-3xl border-l-4 border-amber-500`}>
+         <h3 className="text-amber-400 font-bold flex items-center gap-2 mb-4 font-mono text-sm"><Terminal className="w-4 h-4" /> AI_STRATEGY_REPORT_v4</h3>
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+               <div className="p-4 bg-slate-950 rounded-2xl border border-white/5">
+                  <span className="text-red-400 text-[10px] font-bold">ALERTA RRHH</span>
+                  <p className="text-slate-300 text-xs mt-1">El empleado "Marcos R." tiene turno mañana mañana, pero cierra hoy a las 02:00 AM. <strong>Alto riesgo de error por fatiga.</strong> Se sugiere re-asignar.</p>
+               </div>
+               <div className="p-4 bg-slate-950 rounded-2xl border border-white/5">
+                  <span className="text-cyan-400 text-[10px] font-bold">OPTIMIZACIÓN MENÚ</span>
+                  <p className="text-slate-300 text-xs mt-1">El producto "Risotto de Hongos" tiene 12% de merma. Eliminar de carta y potenciar "Pastas Caseras" que subió 20% en demanda.</p>
+               </div>
+            </div>
+            <div className="space-y-4">
+               <div className="p-4 bg-slate-950 rounded-2xl border border-white/5">
+                  <span className="text-emerald-400 text-[10px] font-bold">ESTACIONALIDAD</span>
+                  <p className="text-slate-300 text-xs mt-1">Transición a temporada alta detectada. Extender horario de atención los viernes mejora ingresos proyectados en 18%.</p>
+               </div>
+               <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-center h-20">
+                  <p className="text-amber-400 font-bold text-center text-xs">Estas mejoras se aplican a cualquier rubro: <br/>Salud, Legal, Educación, Comercio.</p>
+               </div>
+            </div>
+         </div>
+      </div>
+    </motion.div>
+  );
+
   const renderView = () => {
     switch (currentView) {
-      case View.DASHBOARD: return <DashboardView />;
+      case View.DASHBOARD: return (
+        <div className="space-y-8">
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className={`${glassCard} p-6 rounded-3xl`}><h4 className="text-slate-500 text-xs font-bold uppercase mb-2">Ingresos</h4><div className="text-3xl font-bold text-white">$ 2.450.000</div><div className="h-1 w-full bg-cyan-500 mt-4 rounded-full" /></div>
+              <div className={`${glassCard} p-6 rounded-3xl`}><h4 className="text-slate-500 text-xs font-bold uppercase mb-2">Eficiencia</h4><div className="text-3xl font-bold text-white">94.2%</div><div className="h-1 w-full bg-emerald-500 mt-4 rounded-full" /></div>
+              <div className={`${glassCard} p-6 rounded-3xl`}><h4 className="text-slate-500 text-xs font-bold uppercase mb-2">Neural Load</h4><div className="text-3xl font-bold text-white">8ms</div><div className="h-1 w-full bg-amber-500 mt-4 rounded-full" /></div>
+           </div>
+           <AuditorSection />
+        </div>
+      );
       case View.POS: return <POSView />;
-      case View.TABLES: return <TablesView />;
+      case View.TABLES: return (
+        <div className="h-full flex flex-col items-center justify-center">
+           <h2 className="text-xl font-bold text-white mb-8">Mapa de Mesas (Click para facturar)</h2>
+           <div className="grid grid-cols-3 gap-8">
+              {[1,2,3,4,5,6,7,8,9].map(i => (
+                <motion.div 
+                  key={i} whileHover={{ scale: 1.1 }} onClick={() => setCurrentView(View.POS)}
+                  className="w-20 h-20 bg-slate-800 rounded-full border-2 border-slate-600 flex items-center justify-center text-white font-bold cursor-pointer hover:border-orange-500"
+                >
+                  {i}
+                </motion.div>
+              ))}
+           </div>
+        </div>
+      );
       case View.RENTALS: return <RentalsView />;
-      case View.DENTIST: return <DentistView />;
-      case View.LEGAL: return <LegalView />;
+      case View.SCHOOL: return <SchoolView />;
+      case View.VISION: return <VisionView />;
+      case View.FISCAL: return <FiscalView />;
       default: return null;
     }
   };
 
   return (
-    <div className="flex min-h-screen font-sans bg-slate-950 relative overflow-hidden">
-      {/* Botón Menú Móvil */}
-      <div className="fixed top-4 left-4 z-[60] md:hidden">
-        <button 
-          onClick={() => setIsSidebarOpen(true)}
-          className="p-2 bg-slate-900 border border-slate-700 rounded-lg text-white shadow-lg backdrop-blur-md"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
-      </div>
-
-      <Sidebar 
-        currentView={currentView} 
-        onNavigate={setCurrentView} 
-        onExit={onExit} 
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
-      
-      <main className="flex-1 md:ml-64 p-4 md:p-8 relative z-10 pt-16 md:pt-8 overflow-y-auto h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950">
-        <AnimatePresence mode='wait'>
-          <motion.div
-            key={currentView}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-            transition={{ duration: 0.2 }}
-            className="h-full pb-20"
-          >
-            {renderView()}
-          </motion.div>
-        </AnimatePresence>
-      </main>
-    </div>
-  );
-};
-
-// ==========================================
-// 2. LANDING PAGE
-// ==========================================
-
-const sectionVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-};
-
-const services = [
-    { id: 'ia-impulso', icon: Bot, name: "Impulso IA", desc: "WhatsApp automático y auditoría de precios." },
-    { id: 'it-pro', icon: Server, name: "Infraestructura", desc: "Servidores y redes que no fallan." },
-    { id: 'redes-wifi', icon: Wifi, name: "WiFi Hoteles", desc: "Cobertura total garantizada." },
-    { id: 'seguridad-ia', icon: Camera, name: "Seguridad Pro", desc: "Cámaras que entienden lo que ven." },
-    { id: 'workstations', icon: Cpu, name: "Workstations", desc: "PCs para Render y Arquitectura." },
-];
-
-const navLinks = [
-  { name: 'Servicios', href: '#servicios' },
-  { name: 'Nosotros', href: '#nosotros' },
-  { name: 'Contacto', href: '#contacto' }
-];
-
-const MotionSection: FC<{ children: ReactNode; className?: string; id?: string }> = ({ children, className = '', id }) => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.1 });
-  return (
-    <motion.section
-      id={id}
-      ref={ref}
-      className={`py-16 md:py-24 ${className} relative z-10`}
-      variants={sectionVariants}
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
-    >
-      <div className="container mx-auto px-6">{children}</div>
-    </motion.section>
-  );
-};
-
-const AnimatedCTA: FC<{ onClick?: () => void; children: ReactNode; primary?: boolean }> = ({ onClick, children, primary = true }) => (
-  <motion.button
-    onClick={onClick}
-    whileTap={{ scale: 0.98 }}
-    className={`w-full md:w-auto flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-bold transition-all duration-300 ${
-      primary 
-      ? 'bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:scale-105' 
-      : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
-    }`}
-  >
-    <span className="relative z-10 flex items-center gap-2">{children}</span>
-  </motion.button>
-);
-
-const LandingPage: FC<{ onEnterDemo: () => void }> = ({ onEnterDemo }) => {
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
-  const [whatsappUrl, setWhatsappUrl] = useState("https://wa.me/542255605257");
-
-  useEffect(() => {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const phone = "542255605257";
-    const message = encodeURIComponent("Hola Phoenix IA.");
-    if (isMobile) setWhatsappUrl(`whatsapp://send?phone=${phone}&text=${message}`);
-    else setWhatsappUrl(`https://web.whatsapp.com/send?phone=${phone}&text=${message}`);
-  }, []);
-
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
-    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
-  }
-
-  return (
-    <div className="text-slate-200 font-sans selection:bg-cyan-500/30 relative bg-slate-950">
-      <div className="fixed inset-0 pointer-events-none z-0">
-         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#22d3ee 1px, transparent 1px), linear-gradient(to right, #22d3ee 1px, transparent 1px)', backgroundSize: '50px 50px' }}></div>
-         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#020617_100%)]"></div>
-      </div>
-
-      <motion.div className="fixed top-0 left-0 right-0 h-1 bg-cyan-500 z-[60] origin-left shadow-[0_0_10px_#22d3ee]" style={{ scaleX }} />
-
-      <nav className="fixed top-0 w-full z-50 bg-slate-950/80 backdrop-blur-md border-b border-white/5">
-        <div className="container mx-auto px-6 h-20 flex justify-between items-center">
-          <a href="#hero" onClick={(e) => handleNavClick(e, '#hero')} className="flex items-center gap-2 cursor-pointer">
-            <img src="/logo-phoenix.png" alt="Logo" className="h-8 w-auto" />
-            <span className="text-lg font-black tracking-tighter text-white uppercase md:block hidden">Phoenix <span className="text-cyan-400">IA</span></span>
-          </a>
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex gap-6">
-               {navLinks.map(item => (
-                 <a key={item.name} href={item.href} onClick={(e) => handleNavClick(e, item.href)} className="text-xs font-bold text-slate-300 hover:text-cyan-400 uppercase tracking-widest">{item.name}</a>
-               ))}
-            </div>
-            <button onClick={onEnterDemo} className="flex items-center gap-2 bg-cyan-500/10 text-cyan-400 px-3 py-2 rounded-lg border border-cyan-500/30 text-xs font-bold uppercase tracking-widest hover:bg-cyan-500/20 transition-colors">
-                <LayoutDashboard className="w-4 h-4" /> <span className="hidden md:inline">Live</span> Demo
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <section id="hero" className="min-h-screen flex items-center justify-center pt-20 relative z-10">
-        <div className="container mx-auto px-6 text-center relative z-10">
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-4xl md:text-7xl font-black mb-6 leading-tight text-white tracking-tighter">
-            MENOS GESTIÓN.<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">MÁS RENTABILIDAD.</span>
-          </motion.h1>
-          <p className="max-w-2xl mx-auto text-lg text-slate-300 mb-10 leading-relaxed font-light">
-            Evolucionamos negocios en la costa mediante <strong>Inteligencia Artificial aplicada</strong>.
-          </p>
-          <div className="flex flex-col md:flex-row gap-4 justify-center items-center w-full max-w-md mx-auto md:max-w-none">
-             <AnimatedCTA onClick={onEnterDemo} primary={false}>
-                <LayoutDashboard className="w-5 h-5 text-cyan-400" /> 
-                <span>Probar Demo</span>
-            </AnimatedCTA>
-            <a href={whatsappUrl} className="w-full md:w-auto" target="_blank" rel="noopener noreferrer">
-              <AnimatedCTA>
-                <MessageCircle className="w-5 h-5" />
-                <span>WhatsApp</span>
-              </AnimatedCTA>
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <MotionSection id="servicios">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-extrabold text-white mb-2">Soluciones</h2>
-          <p className="text-cyan-400 uppercase tracking-widest text-xs font-bold">Tecnología Google Certified</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {services.map((s, i) => (
-            <motion.div 
-              key={s.id} 
-              className={`${glassCard} p-6 rounded-2xl border-white/5 hover:border-cyan-500/30 transition-colors`}
-            >
-              <s.icon className="w-10 h-10 text-cyan-400 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">{s.name}</h3>
-              <p className="text-slate-300 text-sm leading-relaxed">{s.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </MotionSection>
-
-      <footer id="contacto" className="py-16 border-t border-white/5 bg-slate-950/80 backdrop-blur-xl text-center relative z-10">
-        <div className="max-w-2xl mx-auto px-6">
-          <h2 className="text-2xl font-bold text-white mb-6">¿LISTO PARA ESCALAR?</h2>
-          <div className="flex justify-center">
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-              <AnimatedCTA>
-                <MessageCircle className="w-6 h-6" />
-                <span>Hablar con Especialista</span>
-              </AnimatedCTA>
-            </a>
-          </div>
-          <p className="mt-10 text-slate-500 text-xs">© 2026 PHOENIX IA</p>
-        </div>
-      </footer>
-    </div>
-  );
-};
-
-export default function App() {
-  const [isDemoMode, setIsDemoMode] = useState(false);
-  return (
     <AnimatePresence mode="wait">
       {isDemoMode ? (
-        <motion.div key="demo" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <DemoApp onExit={() => setIsDemoMode(false)} />
+        <motion.div key="demo" className="flex min-h-screen bg-slate-950 text-slate-100 font-sans">
+          {/* Sidebar */}
+          <aside className="w-64 bg-slate-950 border-r border-slate-800 p-6 hidden md:flex flex-col justify-between">
+            <div className="space-y-8">
+               <div className="flex items-center gap-2"><img src="/logo-phoenix.png" className="h-8" /><span className="font-bold">SUITE</span></div>
+               <nav className="space-y-2">
+                 {[
+                   { id: View.DASHBOARD, name: 'Dashboard', icon: LayoutDashboard },
+                   { id: View.POS, name: 'Punto de Venta', icon: ShoppingCart },
+                   { id: View.TABLES, name: 'Mesas', icon: Grid3x3 },
+                   { id: View.RENTALS, name: 'Alquileres', icon: Building },
+                   { id: View.SCHOOL, name: 'Colegio', icon: GraduationCap },
+                   { id: View.VISION, name: 'Vision IA', icon: Eye },
+                   { id: View.FISCAL, name: 'Fis-cal', icon: ShieldCheck },
+                 ].map(item => (
+                   <button 
+                    key={item.id} onClick={() => setCurrentView(item.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${currentView === item.id ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-slate-400 hover:bg-slate-900'}`}
+                   >
+                     <item.icon className="w-4 h-4" /> <span className="text-sm font-medium">{item.name}</span>
+                   </button>
+                 ))}
+               </nav>
+            </div>
+            <button onClick={() => setIsDemoMode(false)} className="text-red-400 flex items-center gap-2 text-sm"><LogOut className="w-4 h-4" /> Salir</button>
+          </aside>
+
+          {/* Main Content */}
+          <main className="flex-1 p-8 overflow-y-auto">
+             {renderView()}
+          </main>
         </motion.div>
       ) : (
-        <motion.div key="landing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <LandingPage onEnterDemo={() => setIsDemoMode(true)} />
+        <motion.div key="landing" className="bg-slate-950 text-white min-h-screen">
+          {/* Hero Simplificado para Landing */}
+          <nav className="fixed top-0 w-full h-20 flex items-center justify-between px-10 border-b border-white/5 backdrop-blur-md z-50">
+             <div className="flex items-center gap-2"><img src="/logo-phoenix.png" className="h-8" /><span className="font-black uppercase tracking-tighter">Phoenix <span className="text-cyan-400">IA</span></span></div>
+             <button onClick={() => setIsDemoMode(true)} className="bg-cyan-500/10 text-cyan-400 px-4 py-2 rounded-lg border border-cyan-500/30 text-xs font-bold uppercase tracking-widest hover:bg-cyan-500/20 transition-all">Live Demo</button>
+          </nav>
+          
+          <div className="flex flex-col items-center justify-center h-screen text-center px-6">
+             <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-5xl md:text-8xl font-black leading-tight tracking-tighter">
+                EVOLUCIONAMOS <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">TU NEGOCIO.</span>
+             </motion.h1>
+             <p className="max-w-xl text-slate-400 mt-6 text-lg">Impulsamos la rentabilidad mediante Inteligencia Artificial aplicada a cualquier rubro en la costa.</p>
+             <div className="mt-10 flex gap-4">
+                <button onClick={() => setIsDemoMode(true)} className="bg-cyan-500 text-slate-950 px-8 py-4 rounded-xl font-bold flex items-center gap-2"><LayoutDashboard className="w-5 h-5" /> Probar Demo Interactiva</button>
+                <a href="https://wa.me/542255605257" className="bg-white/5 border border-white/10 px-8 py-4 rounded-xl font-bold flex items-center gap-2"><MessageCircle className="w-5 h-5" /> Consultar</a>
+             </div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

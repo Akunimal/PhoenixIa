@@ -5,7 +5,8 @@ import {
   Cpu, Wifi, MessageCircle, TrendingUp, Clock, Bot,
   LayoutDashboard, ShoppingCart, Settings, LogOut, Search, 
   AlertTriangle, FileText, Zap, ChevronRight, BarChart3, Terminal, Menu, X,
-  Users, Calendar, TrendingDown, Leaf, Layers
+  Users, Calendar, TrendingDown, Leaf, Layers, Plus, Trash2, CheckCircle2,
+  Grid3x3, Building, Stethoscope, Scale, ShieldCheck, User, FileWarning
 } from 'lucide-react';
 
 // ==========================================
@@ -14,38 +15,7 @@ import {
 
 const glassCard = "bg-slate-900/60 backdrop-blur-md border border-white/5 shadow-xl";
 
-// --- Componente de Barra de Progreso Animada ---
-const AnimatedProgressBar: FC<{ value: number; color: string; delay?: number }> = ({ value, color, delay = 0 }) => (
-  <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden mt-2">
-    <motion.div
-      initial={{ width: 0 }}
-      animate={{ width: `${value}%` }}
-      transition={{ duration: 1.5, delay: delay, ease: "circOut" }}
-      className={`h-full rounded-full ${color}`}
-    />
-  </div>
-);
-
-// --- Componente de Gráfico de Barras Verticales ---
-const AnimatedBarChart = () => (
-  <div className="flex items-end justify-between h-32 gap-2 mt-4">
-    {[35, 55, 40, 70, 60, 90, 85].map((height, i) => (
-      <motion.div
-        key={i}
-        initial={{ height: 0, opacity: 0 }}
-        animate={{ height: `${height}%`, opacity: 1 }}
-        transition={{ duration: 0.8, delay: i * 0.1 }}
-        className="w-full bg-cyan-500/20 hover:bg-cyan-500/40 rounded-t-sm relative group transition-colors"
-      >
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity">
-          {height}%
-        </div>
-      </motion.div>
-    ))}
-  </div>
-);
-
-// Variantes Generales
+// Variantes de Animación
 const fadeInScale = {
   hidden: { opacity: 0, scale: 0.98 },
   visible: { opacity: 1, scale: 1, transition: { duration: 0.4, ease: "easeOut" } }
@@ -54,8 +24,12 @@ const fadeInScale = {
 const useTypewriter = (text: string, speed: number = 20, start: boolean = false) => {
   const [displayText, setDisplayText] = useState('');
   useEffect(() => {
-    if (!start) return;
+    if (!start) {
+        setDisplayText('');
+        return;
+    }
     let i = 0;
+    setDisplayText('');
     const timer = setInterval(() => {
       if (i < text.length) {
         setDisplayText((prev) => prev + text.charAt(i));
@@ -73,52 +47,34 @@ const useTypewriter = (text: string, speed: number = 20, start: boolean = false)
 // 1. COMPONENTES DEL DASHBOARD / DEMO
 // ==========================================
 
-enum View { DASHBOARD, POS, AUDITOR, CONFIG }
+enum View { DASHBOARD, POS, TABLES, RENTALS, DENTIST, LEGAL, CONFIG }
 
 const themes = {
   [View.DASHBOARD]: { color: 'text-cyan-400', border: 'border-cyan-500/30', bg: 'bg-cyan-500/10' },
   [View.POS]: { color: 'text-emerald-400', border: 'border-emerald-500/30', bg: 'bg-emerald-500/10' },
-  [View.AUDITOR]: { color: 'text-amber-400', border: 'border-amber-500/30', bg: 'bg-amber-500/10' },
+  [View.TABLES]: { color: 'text-orange-400', border: 'border-orange-500/30', bg: 'bg-orange-500/10' },
+  [View.RENTALS]: { color: 'text-rose-400', border: 'border-rose-500/30', bg: 'bg-rose-500/10' },
+  [View.DENTIST]: { color: 'text-blue-400', border: 'border-blue-500/30', bg: 'bg-blue-500/10' },
+  [View.LEGAL]: { color: 'text-indigo-400', border: 'border-indigo-500/30', bg: 'bg-indigo-500/10' },
   [View.CONFIG]: { color: 'text-violet-400', border: 'border-violet-500/30', bg: 'bg-violet-500/10' },
 };
 
-const MetricCard: FC<{ title: string; value: string; trend: string; isPositive?: boolean; theme: any; progress: number; delay?: number }> = ({ title, value, trend, isPositive, theme, progress, delay }) => (
-  <motion.div 
-    variants={fadeInScale}
-    className={`${glassCard} p-6 rounded-2xl border-l-4 ${theme.border.replace('/30', '')} relative overflow-hidden`}
-  >
-    <div className="flex justify-between items-start mb-2">
-      <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">{title}</h3>
-      <div className={`text-xs font-bold flex items-center gap-1 ${isPositive ? theme.color : 'text-red-400'}`}>
-        {isPositive ? <TrendingUp className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
-        {trend}
-      </div>
-    </div>
-    <div className="text-3xl font-bold text-white mb-4">{value}</div>
-    
-    {/* Barra Animada */}
-    <div className="flex justify-between text-[10px] text-slate-500 mb-1">
-      <span>Meta Mensual</span>
-      <span>{progress}%</span>
-    </div>
-    <AnimatedProgressBar value={progress} color={theme.color.replace('text-', 'bg-')} delay={delay} />
-  </motion.div>
-);
-
 const Sidebar: FC<{ currentView: View; onNavigate: (v: View) => void; onExit: () => void; isOpen: boolean; onClose: () => void }> = ({ currentView, onNavigate, onExit, isOpen, onClose }) => {
-  const t = themes[currentView];
+  const t = themes[currentView] || themes[View.DASHBOARD];
   
   const menuItems = [
-    { id: View.DASHBOARD, label: 'Dashboard', icon: LayoutDashboard },
-    { id: View.POS, label: 'Punto de Venta', icon: ShoppingCart },
-    { id: View.AUDITOR, label: 'Auditor IA', icon: Bot },
-    { id: View.CONFIG, label: 'Configuración', icon: Settings },
+    { id: View.DASHBOARD, label: 'Dashboard General', icon: LayoutDashboard },
+    { id: View.POS, label: 'POS Gastronomía', icon: ShoppingCart },
+    { id: View.TABLES, label: 'Mapa de Mesas', icon: Grid3x3 },
+    { id: View.RENTALS, label: 'Alquileres / Hotel', icon: Building },
+    { id: View.DENTIST, label: 'Salud (Dentista)', icon: Stethoscope },
+    { id: View.LEGAL, label: 'Legales (Abogados)', icon: Scale },
   ];
 
   const sidebarClasses = `
-    fixed inset-y-0 left-0 z-50 w-64 bg-slate-950 border-r border-slate-800 p-6 flex flex-col justify-between transition-transform duration-300
+    fixed inset-y-0 left-0 z-50 w-64 bg-slate-950 border-r border-slate-800 p-4 flex flex-col justify-between transition-transform duration-300
     ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-    md:translate-x-0 
+    md:translate-x-0 overflow-y-auto
   `;
 
   return (
@@ -127,35 +83,35 @@ const Sidebar: FC<{ currentView: View; onNavigate: (v: View) => void; onExit: ()
 
       <aside className={sidebarClasses}>
         <div>
-          <div className="flex items-center justify-between mb-10 px-2">
+          <div className="flex items-center justify-between mb-8 px-2">
             <div className="flex items-center gap-2">
               <img src="/logo-phoenix.png" alt="Logo" className="h-8 w-auto" />
-              <span className="font-bold text-white tracking-tight text-lg">PHOENIX <span className={`transition-colors duration-500 ${t.color}`}>SUITE</span></span>
+              <span className="font-bold text-white tracking-tight text-sm">PHOENIX <span className={`transition-colors duration-500 ${t.color}`}>SUITE</span></span>
             </div>
             <button onClick={onClose} className="md:hidden text-slate-400 hover:text-white">
               <X className="w-6 h-6" />
             </button>
           </div>
 
-          <nav className="space-y-2">
+          <nav className="space-y-1">
             {menuItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => { onNavigate(item.id); onClose(); }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-sm ${
                   currentView === item.id 
                   ? `${t.bg} ${t.color} border ${t.border}` 
                   : 'text-slate-400 hover:bg-slate-900 hover:text-white'
                 }`}
               >
-                <item.icon className="w-5 h-5" />
+                <item.icon className="w-4 h-4" />
                 <span className="font-medium">{item.label}</span>
               </button>
             ))}
           </nav>
         </div>
-        <button onClick={onExit} className="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-950/30 rounded-xl transition-all border border-transparent hover:border-red-900/50">
-          <LogOut className="w-5 h-5" />
+        <button onClick={onExit} className="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-950/30 rounded-xl transition-all border border-transparent hover:border-red-900/50 mt-4 text-sm">
+          <LogOut className="w-4 h-4" />
           <span>Salir de Demo</span>
         </button>
       </aside>
@@ -168,231 +124,296 @@ const Sidebar: FC<{ currentView: View; onNavigate: (v: View) => void; onExit: ()
 const DashboardView = () => {
   const t = themes[View.DASHBOARD];
   return (
-    <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.1 } } }} className="space-y-8">
+    <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.1 } } }} className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-2">
         <h2 className="text-2xl md:text-3xl font-bold text-white">Tablero de <span className={t.color}>Control</span></h2>
-        <span className="text-slate-500 text-sm font-mono">Última sincro: Hace 2 min</span>
+        <span className="text-slate-500 text-sm font-mono">Estado: Online</span>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        <MetricCard title="Ingresos Semanales" value="$ 850.200" trend="+12%" isPositive theme={t} progress={78} delay={0.2} />
-        <MetricCard title="Tickets Promedio" value="142" trend="+5%" isPositive theme={t} progress={65} delay={0.4} />
-        <MetricCard title="Eficiencia Operativa" value="98%" trend="Óptimo" isPositive theme={t} progress={98} delay={0.6} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className={`${glassCard} p-6 rounded-2xl border-l-4 border-cyan-500`}>
+           <h3 className="text-slate-400 text-xs font-bold uppercase mb-2">Ventas Totales</h3>
+           <div className="text-3xl font-bold text-white">$ 1.2M</div>
+           <div className="text-cyan-400 text-xs mt-2 font-bold">+15% vs mes anterior</div>
+        </div>
+        <div className={`${glassCard} p-6 rounded-2xl border-l-4 border-emerald-500`}>
+           <h3 className="text-slate-400 text-xs font-bold uppercase mb-2">Transacciones</h3>
+           <div className="text-3xl font-bold text-white">450</div>
+           <div className="text-emerald-400 text-xs mt-2 font-bold">98% Satisfacción</div>
+        </div>
+        <div className={`${glassCard} p-6 rounded-2xl border-l-4 border-amber-500`}>
+           <h3 className="text-slate-400 text-xs font-bold uppercase mb-2">Auditoría IA</h3>
+           <div className="text-3xl font-bold text-white">3</div>
+           <div className="text-amber-400 text-xs mt-2 font-bold">Alertas Activas</div>
+        </div>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Gráfico de Ventas Visual */}
-        <div className={`${glassCard} p-6 rounded-2xl`}>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-slate-300 font-bold">Rendimiento en Tiempo Real</h3>
-            <BarChart3 className="text-slate-500 w-5 h-5" />
-          </div>
-          <AnimatedBarChart />
-          <div className="flex justify-between mt-2 text-xs text-slate-500 px-1">
-             <span>Lun</span><span>Mar</span><span>Mie</span><span>Jue</span><span>Vie</span><span>Sab</span><span>Dom</span>
-          </div>
-        </div>
-
-        {/* Alertas Rápidas */}
-        <div className={`${glassCard} p-6 rounded-2xl`}>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-slate-300 font-bold">Alertas Operativas</h3>
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-          </div>
-          <div className="space-y-3">
-             {[
-               { icon: Clock, text: "Personal de cocina llegando a límite de horas extra.", color: "text-yellow-400" },
-               { icon: TrendingDown, text: "Stock de 'Café' bajo (3 días restantes).", color: "text-orange-400" },
-               { icon: Users, text: "Alta demanda prevista para el sábado noche.", color: "text-cyan-400" }
-             ].map((alert, i) => (
-               <motion.div 
-                 key={i} 
-                 initial={{ x: 20, opacity: 0 }} 
-                 animate={{ x: 0, opacity: 1 }} 
-                 transition={{ delay: 0.8 + (i * 0.1) }}
-                 className="flex items-center gap-3 p-3 bg-slate-950/50 rounded-lg border border-white/5"
-               >
-                 <alert.icon className={`w-4 h-4 ${alert.color}`} />
-                 <span className="text-sm text-slate-300">{alert.text}</span>
-               </motion.div>
-             ))}
-          </div>
-        </div>
+      
+      <div className={`${glassCard} p-8 rounded-2xl text-center`}>
+         <Bot className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+         <h3 className="text-white text-lg font-bold">Selecciona un Módulo del Menú</h3>
+         <p className="text-slate-400 text-sm mt-2">Explora las soluciones específicas para cada industria.</p>
       </div>
     </motion.div>
   );
 };
 
+// 1. POS FUNCTIONAL (Gastronomía)
+interface CartItem { id: number; name: string; price: number; quantity: number; }
 const POSView = () => {
   const t = themes[View.POS];
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const products = [
+    { id: 1, name: "Café Espresso", price: 2800 },
+    { id: 2, name: "Medialuna", price: 900 },
+    { id: 3, name: "Tostado J&Q", price: 4500 },
+    { id: 4, name: "Jugo Naranja", price: 3200 },
+    { id: 5, name: "Licuado Fruta", price: 3800 },
+    { id: 6, name: "Agua Mineral", price: 2000 },
+  ];
+  const addToCart = (product: any) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.id === product.id);
+      return existing ? prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item) : [...prev, { ...product, quantity: 1 }];
+    });
+  };
+  const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const handleCheckout = () => {
+    setIsProcessing(true);
+    setTimeout(() => { setCart([]); setIsProcessing(false); }, 1500);
+  };
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col md:grid md:grid-cols-3 gap-6 h-auto md:h-[85vh]">
       <div className={`col-span-2 ${glassCard} rounded-2xl p-4 md:p-6 flex flex-col order-2 md:order-1`}>
-         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-            <h2 className="text-xl font-bold text-white">Punto de Venta <span className={t.color}>Rápido</span></h2>
-            <input type="text" placeholder="Buscar..." className="w-full md:w-auto bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:border-emerald-500 outline-none transition-colors" />
-         </div>
-         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4 overflow-y-auto pr-2 custom-scrollbar max-h-[400px] md:max-h-none">
-            {[1,2,3,4,5,6,7,8,9].map(i => (
-              <motion.div 
-                key={i} 
-                whileTap={{ scale: 0.95 }}
-                className={`bg-slate-950/80 p-3 md:p-4 rounded-xl border border-white/5 hover:${t.border} cursor-pointer transition-all group`}
-              >
-                <div className={`h-12 md:h-16 bg-slate-900 rounded-lg mb-2 flex items-center justify-center group-hover:${t.bg} transition-colors`}>
-                   <Camera className="text-slate-600 w-5 h-5 md:w-6 md:h-6" />
-                </div>
-                <p className="text-white font-medium text-xs md:text-sm truncate">Item {i}</p>
-                <p className={`${t.color} font-bold text-sm`}>$ {i}500</p>
+         <h2 className="text-xl font-bold text-white mb-6">Punto de Venta <span className={t.color}>Rápido</span></h2>
+         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 overflow-y-auto pr-2 custom-scrollbar">
+            {products.map(product => (
+              <motion.div key={product.id} whileTap={{ scale: 0.95 }} onClick={() => addToCart(product)} className={`bg-slate-950/80 p-4 rounded-xl border border-white/5 hover:${t.border} cursor-pointer transition-all group`}>
+                <div className="h-12 bg-slate-900 rounded-lg mb-2 flex items-center justify-center group-hover:bg-emerald-500/10"><Camera className="text-slate-600 group-hover:text-emerald-400 w-5 h-5" /></div>
+                <p className="text-white font-medium text-sm truncate">{product.name}</p>
+                <p className={`${t.color} font-bold text-sm`}>$ {product.price}</p>
               </motion.div>
             ))}
          </div>
       </div>
-      <div className={`col-span-1 ${glassCard} rounded-2xl p-4 md:p-6 flex flex-col justify-between border-t-4 ${t.border.replace('/30','')} order-1 md:order-2`}>
-         <div>
-           <h2 className="text-xl font-bold text-white mb-6">Ticket #055</h2>
-           <div className="space-y-3 mb-4">
-             <div className="flex justify-between text-slate-300 text-sm"><span>2x Café</span><span>$ 5.600</span></div>
-             <div className="flex justify-between text-slate-300 text-sm"><span>1x Tostado</span><span>$ 4.200</span></div>
-           </div>
+      <div className={`col-span-1 ${glassCard} rounded-2xl p-4 md:p-6 flex flex-col border-t-4 ${t.border.replace('/30','')} order-1 md:order-2`}>
+         <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
+           {cart.length === 0 ? <div className="text-center text-slate-600 mt-10 text-sm">Carrito vacío.</div> : cart.map(item => (
+             <div key={item.id} className="flex justify-between text-slate-300 text-sm p-2 bg-slate-900/50 rounded-lg"><span>{item.quantity}x {item.name}</span><span>$ {item.price * item.quantity}</span></div>
+           ))}
          </div>
-         <motion.button 
-           whileTap={{ scale: 0.98 }}
-           className={`w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 md:py-4 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 mt-4`}
-         >
-           <FileText className="w-5 h-5" /> Cobrar
-         </motion.button>
+         <div className="mt-4 pt-4 border-t border-white/10">
+           <div className="flex justify-between items-end mb-4"><span className="text-slate-400">Total</span><span className="text-2xl font-bold text-white">$ {total.toLocaleString()}</span></div>
+           <motion.button onClick={handleCheckout} disabled={cart.length === 0 || isProcessing} whileTap={{ scale: 0.98 }} className={`w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2`}>
+             {isProcessing ? <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" /> : <><CheckCircle2 className="w-5 h-5" /> Cobrar</>}
+           </motion.button>
+         </div>
       </div>
     </motion.div>
   );
 };
 
-// --- AUDITORÍA IA SERIA Y PROFUNDA ---
-const AuditorView = () => {
-  const [analyzing, setAnalyzing] = useState(false);
-  const [complete, setComplete] = useState(false);
-  const [activeTab, setActiveTab] = useState('summary');
-
-  // Textos para la simulación de carga
-  const loadSteps = [
-    "Conectando Neural Core...", 
-    "Cruzando datos de turnos con ley laboral...", 
-    "Analizando rentabilidad de carta...", 
-    "Calculando proyección estacional...",
-    "Generando reporte estratégico..."
-  ];
-  const [currentStep, setCurrentStep] = useState(0);
-
-  useEffect(() => {
-    if (analyzing && currentStep < loadSteps.length) {
-      const timer = setTimeout(() => setCurrentStep(prev => prev + 1), 800);
-      return () => clearTimeout(timer);
-    } else if (currentStep === loadSteps.length) {
-      setComplete(true);
-    }
-  }, [analyzing, currentStep]);
+// 2. MAPA DE MESAS (Nuevo)
+const TablesView = () => {
+  const [tables, setTables] = useState(Array.from({ length: 9 }).map((_, i) => ({ id: i + 1, status: i % 3 === 0 ? 'occupied' : 'free' })));
+  const toggleTable = (id: number) => {
+    setTables(prev => prev.map(t => t.id === id ? { ...t, status: t.status === 'free' ? 'occupied' : 'free' } : t));
+  };
 
   return (
-    <div className="h-full flex flex-col max-w-4xl mx-auto px-2">
-      {!analyzing && !complete ? (
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center justify-center h-full text-center space-y-8">
-          <div className="relative">
-             <div className="absolute inset-0 bg-amber-500/20 blur-[50px] rounded-full animate-pulse" />
-             <Bot className="w-24 h-24 md:w-32 md:h-32 text-amber-400 mx-auto relative z-10" />
-          </div>
-          <div>
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Auditoría Estratégica IA</h2>
-            <p className="text-slate-400 text-base md:text-xl max-w-xl mx-auto">
-              Analizamos Recursos Humanos, Inventario y Rentabilidad para darte un plan de acción inmediato. <br/>
-              <span className="text-amber-400/70 text-sm mt-2 block font-mono">Adaptable a: Retail • Gastronomía • Hotelería</span>
-            </p>
-          </div>
-          <motion.button
-            onClick={() => setAnalyzing(true)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="bg-gradient-to-r from-amber-400 to-yellow-600 text-slate-900 px-10 py-5 rounded-full font-black text-xl flex items-center gap-3 shadow-[0_0_30px_rgba(251,191,36,0.3)]"
-          >
-            <Zap className="w-6 h-6 fill-slate-900" />
-            INICIAR ANÁLISIS PROFUNDO
-          </motion.button>
-        </motion.div>
-      ) : !complete ? (
-        <div className="flex flex-col items-center justify-center h-full">
-           <div className="w-64 h-2 bg-slate-800 rounded-full overflow-hidden mb-4">
-             <motion.div 
-               className="h-full bg-amber-400"
-               initial={{ width: 0 }}
-               animate={{ width: `${(currentStep / loadSteps.length) * 100}%` }}
-             />
-           </div>
-           <p className="text-amber-400 font-mono text-sm">{loadSteps[Math.min(currentStep, loadSteps.length - 1)]}</p>
+    <div className="h-full flex flex-col">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-white">Mapa de <span className="text-orange-400">Mesas</span></h2>
+        <div className="flex gap-4 text-xs">
+          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-slate-700 border border-slate-500"></div> Libre</div>
+          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-orange-500/20 border border-orange-500"></div> Ocupada</div>
         </div>
-      ) : (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="h-full flex flex-col">
-          <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/10">
-             <div>
-               <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                 <Terminal className="text-amber-400 w-6 h-6" /> Reporte de Inteligencia
-               </h2>
-               <p className="text-slate-500 text-xs mt-1">ID: #AUDIT-2026-X99 | Prioridad: ALTA</p>
-             </div>
-             <button onClick={() => {setAnalyzing(false); setComplete(false); setCurrentStep(0);}} className="text-slate-400 hover:text-white text-sm">Nueva Auditoría</button>
-          </div>
+      </div>
+      <div className={`${glassCard} p-8 rounded-2xl flex-1 relative overflow-hidden`}>
+        <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+        <div className="grid grid-cols-3 gap-8 max-w-lg mx-auto relative z-10">
+          {tables.map(table => (
+            <motion.div
+              key={table.id}
+              onClick={() => toggleTable(table.id)}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className={`aspect-square rounded-full flex items-center justify-center cursor-pointer border-2 transition-all shadow-lg ${
+                table.status === 'free' 
+                ? 'bg-slate-800 border-slate-600 text-slate-400 hover:border-white' 
+                : 'bg-orange-500/20 border-orange-500 text-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.3)]'
+              }`}
+            >
+              <span className="font-bold text-lg">{table.id}</span>
+            </motion.div>
+          ))}
+        </div>
+        <p className="text-center text-slate-500 mt-10 text-sm">Click en una mesa para cambiar su estado.</p>
+      </div>
+    </div>
+  );
+};
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto pb-10">
-            {/* Tarjeta de Alerta Inmediata */}
-            <div className="bg-red-500/10 border border-red-500/30 p-6 rounded-2xl md:col-span-2">
-               <h3 className="text-red-400 font-bold flex items-center gap-2 mb-2"><AlertTriangle className="w-5 h-5" /> ACCIÓN INMEDIATA REQUERIDA</h3>
-               <p className="text-white text-lg">Se detectó inconsistencia de precios vs. inflación semanal.</p>
-               <p className="text-slate-400 mt-2 text-sm">El insumo "Harina 000" aumentó 12% en base de datos de proveedores. Tus precios de panificados quedaron 8% abajo del margen ideal.</p>
-               <button className="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">Aplicar Ajuste Automático (+8%)</button>
+// 3. ALQUILERES + CHATBOT (Nuevo)
+const RentalsView = () => {
+  const [messages, setMessages] = useState<{role: 'user'|'ai', text: string}[]>([
+    { role: 'user', text: "Hola, tenés disponibilidad para 4 personas del 10 al 15 de enero?" }
+  ]);
+  const [isTyping, setIsTyping] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMessages(prev => [...prev, { 
+        role: 'ai', 
+        text: "Hola! 👋 Revisé el calendario. Lamentablemente del 10 al 15 está todo ocupado. \n\nTengo disponibilidad a partir del 17 de enero. ¿Te sirve esa fecha?" 
+      }]);
+      setIsTyping(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-[80vh]">
+      <div className={`${glassCard} p-6 rounded-2xl flex flex-col`}>
+         <h3 className="text-rose-400 font-bold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5" /> Calendario Enero</h3>
+         <div className="grid grid-cols-7 gap-2 text-center text-sm text-slate-400 mb-2">
+            <div>D</div><div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div>
+         </div>
+         <div className="grid grid-cols-7 gap-2 flex-1">
+            {Array.from({length: 31}).map((_, i) => {
+               const day = i + 1;
+               const isOccupied = (day >= 5 && day <= 15);
+               return (
+                 <div key={day} className={`aspect-square rounded-lg flex items-center justify-center text-sm border ${
+                    isOccupied ? 'bg-rose-500/20 border-rose-500 text-rose-300' : 'bg-slate-900 border-slate-800 text-slate-500'
+                 }`}>
+                   {day}
+                 </div>
+               )
+            })}
+         </div>
+      </div>
+      
+      <div className={`${glassCard} p-6 rounded-2xl flex flex-col relative overflow-hidden border-t-4 border-rose-500`}>
+         <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+            <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center"><Bot className="w-6 h-6 text-rose-400" /></div>
+            <div>
+               <h4 className="text-white font-bold">Auto-Respuesta IA</h4>
+               <p className="text-xs text-rose-400">Simulación WhatsApp Business</p>
             </div>
+         </div>
+         <div className="flex-1 space-y-4">
+            {messages.map((m, i) => (
+              <motion.div initial={{ opacity: 0, x: m.role==='ai'?-20:20 }} animate={{ opacity: 1, x: 0 }} key={i} className={`p-3 rounded-xl max-w-[80%] text-sm ${
+                m.role === 'ai' ? 'bg-slate-800 text-slate-200 rounded-tl-none' : 'bg-rose-500 text-white ml-auto rounded-tr-none'
+              }`}>
+                {m.text}
+              </motion.div>
+            ))}
+            {isTyping && <div className="text-xs text-slate-500 animate-pulse">Escribiendo...</div>}
+         </div>
+      </div>
+    </div>
+  );
+};
 
-            {/* RRHH */}
-            <div className={`${glassCard} p-6 rounded-2xl`}>
-               <h3 className="text-amber-400 font-bold flex items-center gap-2 mb-4"><Users className="w-5 h-5" /> Recursos Humanos & Fatiga</h3>
-               <ul className="space-y-4 text-sm text-slate-300">
-                 <li className="flex gap-3">
-                   <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2"></div>
-                   <span><strong>Alerta de Turno:</strong> El empleado "Juan P." tiene turno mañana (08:00) mañana, pero cierra hoy a las (02:00). Riesgo de agotamiento y error operativo.</span>
-                 </li>
-                 <li className="flex gap-3">
-                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2"></div>
-                   <span><strong>Sugerencia:</strong> Rotar ingreso de Juan P. a las 11:00 AM o cubrir con turno volante.</span>
-                 </li>
-               </ul>
-            </div>
+// 4. DENTISTA (Cross-Check AI)
+const DentistView = () => {
+  const [checking, setChecking] = useState(false);
+  
+  return (
+    <div className="h-full flex flex-col">
+       <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-white">Clínica <span className="text-blue-400">Dental</span></h2>
+        <div className="bg-blue-500/10 border border-blue-500/30 px-3 py-1 rounded-full text-xs text-blue-300 flex items-center gap-2">
+           <ShieldCheck className="w-4 h-4" /> IA Cruzada Activa
+        </div>
+      </div>
 
-            {/* Menú / Inventario */}
-            <div className={`${glassCard} p-6 rounded-2xl`}>
-               <h3 className="text-cyan-400 font-bold flex items-center gap-2 mb-4"><Layers className="w-5 h-5" /> Optimización de Oferta</h3>
-               <ul className="space-y-4 text-sm text-slate-300">
-                 <li className="flex gap-3">
-                   <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2"></div>
-                   <span><strong>Baja Rotación:</strong> El plato "Risotto de Hongos" salió solo 2 veces esta semana. Considerar eliminar de carta para reducir merma.</span>
-                 </li>
-                 <li className="flex gap-3">
-                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2"></div>
-                   <span><strong>Oportunidad:</strong> La "Milanesa Napolitana" es Top Seller. Se sugiere agregar variante "A Caballo" (huevo frito) por bajo costo marginal y alto valor percibido.</span>
-                 </li>
-               </ul>
-            </div>
-
-            {/* Estacionalidad */}
-            <div className={`${glassCard} p-6 rounded-2xl md:col-span-2`}>
-               <h3 className="text-emerald-400 font-bold flex items-center gap-2 mb-4"><Leaf className="w-5 h-5" /> Eficiencia Estacional</h3>
-               <p className="text-slate-300 text-sm mb-3">
-                 Detectamos transición a Temporada Alta en tu zona (Villa Gesell). El histórico indica pico de demanda entre 21:00 y 23:30.
-               </p>
-               <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex justify-between items-center">
-                 <div className="text-emerald-300 text-sm"><strong>Recomendación:</strong> Extender horario de cocina 1 hora (hasta 01:00 AM) viernes y sábados.</div>
-                 <div className="text-emerald-400 font-bold">+15% Ingresos Proyectados</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+         {/* Ficha Paciente */}
+         <div className={`${glassCard} p-6 rounded-2xl`}>
+            <div className="flex gap-4 items-center mb-6">
+               <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center"><User className="w-8 h-8 text-slate-400" /></div>
+               <div>
+                  <h3 className="text-xl font-bold text-white">Juan Pérez</h3>
+                  <p className="text-sm text-slate-400">ID: #8821 | Historial: Alergia Penicilina</p>
                </div>
             </div>
+            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+               <label className="text-xs text-slate-500 uppercase font-bold">Tratamiento Actual</label>
+               <p className="text-white">Endodoncia Molar 38</p>
+               <label className="text-xs text-slate-500 uppercase font-bold mt-4 block">Receta Propuesta</label>
+               <div className="flex justify-between items-center">
+                  <span className="text-white font-mono">Amoxicilina 500mg</span>
+                  <button 
+                    onClick={() => setChecking(prev => !prev)}
+                    className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm transition-colors"
+                  >
+                    Validar
+                  </button>
+               </div>
+            </div>
+         </div>
+
+         {/* Panel Cross-Check */}
+         <div className={`${glassCard} p-6 rounded-2xl border-l-4 border-blue-500 relative overflow-hidden`}>
+            <h3 className="text-blue-400 font-bold mb-4 flex items-center gap-2"><BrainCircuit className="w-5 h-5" /> Verificación Cruzada</h3>
+            
+            {!checking ? (
+               <div className="text-center text-slate-500 mt-10">Esperando validación...</div>
+            ) : (
+               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                  <div className="flex justify-between items-center text-sm p-3 bg-slate-900 rounded-lg">
+                     <span className="text-slate-400">Modelo 1 (Gemini Medical)</span>
+                     <span className="text-red-400 font-bold flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> RIESGO ALTO</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm p-3 bg-slate-900 rounded-lg">
+                     <span className="text-slate-400">Modelo 2 (BioBERT)</span>
+                     <span className="text-red-400 font-bold flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> CONTRAINDICADO</span>
+                  </div>
+                  <div className="bg-red-500/10 border border-red-500 p-4 rounded-xl mt-4">
+                     <p className="text-red-300 font-bold text-sm">¡ALERTA DE SEGURIDAD!</p>
+                     <p className="text-white text-xs mt-1">El paciente es alérgico a la Penicilina (Amoxicilina). Ambas IAs bloquearon la receta.</p>
+                  </div>
+               </motion.div>
+            )}
+         </div>
+      </div>
+    </div>
+  );
+};
+
+// 5. LEGAL (Abogados)
+const LegalView = () => {
+  return (
+    <div className="h-full flex flex-col">
+       <h2 className="text-2xl font-bold text-white mb-6">Estudio <span className="text-indigo-400">Legal</span></h2>
+       <div className={`${glassCard} p-8 rounded-2xl flex-1`}>
+          <div className="flex items-start gap-6">
+             <div className="flex-1 bg-slate-950 p-6 rounded-xl border border-slate-800 font-mono text-xs text-slate-300 leading-relaxed">
+                <p className="mb-4 text-indigo-400 font-bold">// CONTRATO DE ALQUILER COMERCIAL (Borrador)</p>
+                <p>CLÁUSULA 4: ACTUALIZACIÓN</p>
+                <p>El canon locativo se actualizará mensualmente basado en el valor del dólar blue venta...</p>
+                <div className="my-2 h-px bg-slate-800"></div>
+                <p className="text-white bg-red-500/20 p-1 border border-red-500 rounded">CLÁUSULA 5: RENOVACIÓN AUTOMÁTICA</p>
+                <p className="bg-red-500/10">El contrato se renovará automáticamente por 5 años si el inquilino no avisa con 180 días de antelación.</p>
+             </div>
+             
+             <div className="w-1/3 space-y-4">
+                <div className="bg-indigo-500/10 border border-indigo-500/30 p-4 rounded-xl">
+                   <h4 className="text-indigo-300 font-bold text-sm mb-2 flex items-center gap-2"><FileWarning className="w-4 h-4" /> Análisis de Riesgo</h4>
+                   <p className="text-xs text-slate-300 mb-2">Se detectó una cláusula abusiva según el Código Civil y Comercial.</p>
+                   <div className="flex gap-2">
+                      <span className="text-[10px] bg-slate-800 px-2 py-1 rounded text-green-400">Verificado: LegalGPT</span>
+                      <span className="text-[10px] bg-slate-800 px-2 py-1 rounded text-green-400">Verificado: Claude-Law</span>
+                   </div>
+                </div>
+                <button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold text-sm transition-colors">Generar Redacción Alternativa</button>
+             </div>
           </div>
-        </motion.div>
-      )}
+       </div>
     </div>
   );
 };
@@ -405,7 +426,10 @@ const DemoApp: FC<{ onExit: () => void }> = ({ onExit }) => {
     switch (currentView) {
       case View.DASHBOARD: return <DashboardView />;
       case View.POS: return <POSView />;
-      case View.AUDITOR: return <AuditorView />;
+      case View.TABLES: return <TablesView />;
+      case View.RENTALS: return <RentalsView />;
+      case View.DENTIST: return <DentistView />;
+      case View.LEGAL: return <LegalView />;
       default: return null;
     }
   };
@@ -416,7 +440,7 @@ const DemoApp: FC<{ onExit: () => void }> = ({ onExit }) => {
       <div className="fixed top-4 left-4 z-[60] md:hidden">
         <button 
           onClick={() => setIsSidebarOpen(true)}
-          className="p-2 bg-slate-900 border border-slate-700 rounded-lg text-white shadow-lg"
+          className="p-2 bg-slate-900 border border-slate-700 rounded-lg text-white shadow-lg backdrop-blur-md"
         >
           <Menu className="w-6 h-6" />
         </button>
@@ -430,7 +454,7 @@ const DemoApp: FC<{ onExit: () => void }> = ({ onExit }) => {
         onClose={() => setIsSidebarOpen(false)}
       />
       
-      <main className="flex-1 md:ml-64 p-4 md:p-8 relative z-10 pt-16 md:pt-8 overflow-y-auto h-screen">
+      <main className="flex-1 md:ml-64 p-4 md:p-8 relative z-10 pt-16 md:pt-8 overflow-y-auto h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950">
         <AnimatePresence mode='wait'>
           <motion.div
             key={currentView}
@@ -449,7 +473,7 @@ const DemoApp: FC<{ onExit: () => void }> = ({ onExit }) => {
 };
 
 // ==========================================
-// 2. LANDING PAGE (Responsive)
+// 2. LANDING PAGE
 // ==========================================
 
 const sectionVariants = {
@@ -494,8 +518,8 @@ const AnimatedCTA: FC<{ onClick?: () => void; children: ReactNode; primary?: boo
     whileTap={{ scale: 0.98 }}
     className={`w-full md:w-auto flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-bold transition-all duration-300 ${
       primary 
-      ? 'bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/20' 
-      : 'bg-white/5 text-white border border-white/10'
+      ? 'bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:scale-105' 
+      : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
     }`}
   >
     <span className="relative z-10 flex items-center gap-2">{children}</span>
@@ -541,7 +565,7 @@ const LandingPage: FC<{ onEnterDemo: () => void }> = ({ onEnterDemo }) => {
                  <a key={item.name} href={item.href} onClick={(e) => handleNavClick(e, item.href)} className="text-xs font-bold text-slate-300 hover:text-cyan-400 uppercase tracking-widest">{item.name}</a>
                ))}
             </div>
-            <button onClick={onEnterDemo} className="flex items-center gap-2 bg-cyan-500/10 text-cyan-400 px-3 py-2 rounded-lg border border-cyan-500/30 text-xs font-bold uppercase tracking-widest">
+            <button onClick={onEnterDemo} className="flex items-center gap-2 bg-cyan-500/10 text-cyan-400 px-3 py-2 rounded-lg border border-cyan-500/30 text-xs font-bold uppercase tracking-widest hover:bg-cyan-500/20 transition-colors">
                 <LayoutDashboard className="w-4 h-4" /> <span className="hidden md:inline">Live</span> Demo
             </button>
           </div>
@@ -580,7 +604,7 @@ const LandingPage: FC<{ onEnterDemo: () => void }> = ({ onEnterDemo }) => {
           {services.map((s, i) => (
             <motion.div 
               key={s.id} 
-              className={`${glassCard} p-6 rounded-2xl border-white/5`}
+              className={`${glassCard} p-6 rounded-2xl border-white/5 hover:border-cyan-500/30 transition-colors`}
             >
               <s.icon className="w-10 h-10 text-cyan-400 mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">{s.name}</h3>
